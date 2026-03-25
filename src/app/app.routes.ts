@@ -13,9 +13,10 @@ import { WorkerJobsComponent } from './pages/worker/jobs/jobs';
 import { WorkerLayoutComponent } from './layouts/worker-layout/worker-layout';
 import { ClientLayoutComponent } from './layouts/client-layout/client-layout';
 import { AdminLayoutComponent } from './layouts/admin-layout/admin-layout';
+import { AuthGuard } from './guards/auth.guard';
+import { PublicLayoutComponent } from './layouts/public-layout/public-layout';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'login', pathMatch: 'full' },
   { path: 'login', component: LoginComponent },
   { path: 'login-page', component: AuthLoginPageComponent },
   { path: 'register', component: RegisterComponent },
@@ -26,8 +27,27 @@ export const routes: Routes = [
   { path: 'reset-password', component: ResetPasswordPageComponent },
   { path: 'change-password', component: ChangePasswordPageComponent },
   {
+    path: '',
+    component: PublicLayoutComponent,
+    children: [
+      { path: '', loadComponent: () => import('./pages/public/home/home').then((m) => m.PublicHomeComponent) },
+      { path: 'about', loadComponent: () => import('./pages/public/about/about').then((m) => m.PublicAboutComponent) },
+      { path: 'contact', loadComponent: () => import('./pages/public/contact/contact').then((m) => m.PublicContactComponent) },
+      { path: 'faq', loadComponent: () => import('./pages/public/faq/faq').then((m) => m.PublicFaqComponent) },
+      { path: 'help', loadComponent: () => import('./pages/public/help-center/help-center').then((m) => m.PublicHelpCenterComponent) },
+      { path: 'how-it-works', loadComponent: () => import('./pages/public/how-it-works/how-it-works').then((m) => m.PublicHowItWorksComponent) },
+      { path: 'privacy', loadComponent: () => import('./pages/public/privacy-policy/privacy-policy').then((m) => m.PublicPrivacyPolicyComponent) },
+      { path: 'terms', loadComponent: () => import('./pages/public/terms/terms').then((m) => m.PublicTermsComponent) },
+      { path: 'trust-safety', loadComponent: () => import('./pages/public/trust-safety/trust-safety').then((m) => m.PublicTrustSafetyComponent) },
+      { path: 'careers', loadComponent: () => import('./pages/public/careers/careers').then((m) => m.PublicCareersComponent) },
+      { path: 'categories', loadComponent: () => import('./pages/public/categories/categories').then((m) => m.PublicCategoriesComponent) },
+      { path: 'cancellation-policy', loadComponent: () => import('./pages/public/cancellation-policy/cancellation-policy').then((m) => m.PublicCancellationPolicyComponent) },
+    ],
+  },
+  {
     path: 'worker',
     component: WorkerLayoutComponent,
+    canActivate: [AuthGuard],
     children: [
       { path: 'dashboard', loadComponent: () => import('./pages/worker/dashboard/dashboard').then((m) => m.WorkerDashboardComponent) },
       { path: 'jobs', loadComponent: () => import('./pages/worker/jobs/jobs').then((m) => m.WorkerJobsComponent) },
@@ -37,6 +57,7 @@ export const routes: Routes = [
   {
     path: 'client',
     component: ClientLayoutComponent,
+    canActivate: [AuthGuard],
     children: [
       { path: '', loadComponent: () => import('./apps/client/pages/dashboard/dashboard').then((m) => m.ClientDashboardComponent) },
       { path: 'browse-staff', loadComponent: () => import('./apps/client/pages/browse-staff/browse-staff').then((m) => m.BrowseStaffComponent) },
@@ -49,6 +70,7 @@ export const routes: Routes = [
   {
     path: 'admin',
     component: AdminLayoutComponent,
+    canActivate: [AuthGuard],
     children: [
       { path: '', loadComponent: () => import('./apps/admin/pages/dashboard/dashboard').then((m) => m.AdminDashboardComponent) },
       { path: 'dashboard', loadComponent: () => import('./apps/admin/pages/dashboard/dashboard').then((m) => m.AdminDashboardComponent) },
@@ -61,5 +83,5 @@ export const routes: Routes = [
       { path: 'ratings-reviews', loadComponent: () => import('./apps/admin/pages/ratings-reviews/ratings-reviews').then((m) => m.AdminRatingsReviewsComponent) },
     ],
   },
-  { path: '**', redirectTo: 'login' },
+  { path: '**', redirectTo: '' },
 ];
