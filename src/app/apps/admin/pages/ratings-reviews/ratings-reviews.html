@@ -1,0 +1,128 @@
+<div class="ratings-reviews-page">
+  <div class="page-header">
+    <h2>Ratings & Reviews</h2>
+    <p>Manage and monitor customer feedback and ratings</p>
+  </div>
+
+  <div class="reviews-overview">
+    <div class="overview-card main-stat">
+      <div class="stat-content">
+        <h3>Average Rating</h3>
+        <div class="rating-display">
+          <span class="rating-number">{{ averageRating }}</span>
+          <div class="stars-large">
+            <span *ngFor="let i of stars()" class="star filled">{{ starChar(i, averageRatingRounded) }}</span>
+          </div>
+        </div>
+        <p class="total-reviews">{{ reviews.length }} Total Reviews</p>
+      </div>
+    </div>
+    <div class="overview-card">
+      <h4>5 Stars</h4>
+      <p class="stat-value">{{ countByRating(5) }}</p>
+    </div>
+    <div class="overview-card">
+      <h4>4 Stars</h4>
+      <p class="stat-value">{{ countByRating(4) }}</p>
+    </div>
+    <div class="overview-card">
+      <h4>3 Stars</h4>
+      <p class="stat-value">{{ countByRating(3) }}</p>
+    </div>
+    <div class="overview-card">
+      <h4>2 Stars</h4>
+      <p class="stat-value">{{ countByRating(2) }}</p>
+    </div>
+    <div class="overview-card">
+      <h4>1 Star</h4>
+      <p class="stat-value">{{ countByRating(1) }}</p>
+    </div>
+  </div>
+
+  <div class="reviews-toolbar">
+    <div class="search-box">
+      <input type="text" placeholder="Search reviews..." [(ngModel)]="searchTerm" />
+      <span class="search-icon">🔍</span>
+    </div>
+    <button class="add-btn" (click)="handleAddReview()">+ Add Review</button>
+    <div class="filter-buttons">
+      <button class="filter-btn" [ngClass]="filter === 'all' ? 'active' : ''" (click)="filter = 'all'">All</button>
+      <button class="filter-btn" [ngClass]="filter === 'published' ? 'active' : ''" (click)="filter = 'published'">Published</button>
+      <button class="filter-btn" [ngClass]="filter === 'pending' ? 'active' : ''" (click)="filter = 'pending'">Pending</button>
+      <button class="filter-btn" [ngClass]="filter === 'high' ? 'active' : ''" (click)="filter = 'high'">High (4+)</button>
+      <button class="filter-btn" [ngClass]="filter === 'low' ? 'active' : ''" (click)="filter = 'low'">Low (≤2)</button>
+    </div>
+  </div>
+
+  <div class="reviews-list">
+    <div *ngFor="let review of filteredReviews" class="review-card">
+      <div class="review-header">
+        <div class="reviewer-info">
+          <div class="reviewer-avatar">{{ review.client.charAt(0) }}</div>
+          <div class="reviewer-details">
+            <h4>{{ review.client }}</h4>
+            <p class="service-name">{{ review.service }}</p>
+          </div>
+        </div>
+        <div class="review-meta">
+          <div class="rating-stars">
+            <span *ngFor="let i of stars()" [ngClass]="i < (review.rating || 0) ? 'star filled' : 'star'">
+              {{ starChar(i, review.rating) }}
+            </span>
+          </div>
+          <span class="review-date">{{ review.date }}</span>
+        </div>
+      </div>
+      <p class="review-comment">{{ review.comment }}</p>
+      <div class="review-footer">
+        <span [ngClass]="'status-badge status-' + review.status.toLowerCase()">{{ review.status }}</span>
+        <div class="review-actions">
+          <button class="action-btn approve" title="Approve" (click)="handleApprove(review.id)">✓ Approve</button>
+          <button class="action-btn reject" title="Reject" (click)="handleReject(review.id)">✗ Reject</button>
+          <button class="action-btn edit" title="Edit" (click)="handleEdit(review.id)">✏️ Edit</button>
+          <button class="action-btn delete" title="Delete" (click)="handleDelete(review.id)">🗑️ Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="filteredReviews.length === 0" class="no-results">
+    <p>No reviews found matching your criteria.</p>
+  </div>
+
+  <div *ngIf="showModal" class="modal-overlay" (click)="showModal = false">
+    <div class="modal-content" (click)="stopPropagation($event)">
+      <h3>Add Manual Review</h3>
+      <form class="modal-form" (ngSubmit)="handleCreateReview($event)">
+        <div class="form-group">
+          <label>Select Booking</label>
+          <select [(ngModel)]="newReview.bookingId" name="bookingId" required>
+            <option value="">-- Select Completed Booking --</option>
+            <option *ngFor="let b of bookings" [value]="b.id">
+              #{{ b.id }} - {{ b.client_name }} (Service: {{ b.service_name }})
+            </option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Rating (1-5)</label>
+          <select [(ngModel)]="newReview.rating" name="rating">
+            <option value="5">5 - Excellent</option>
+            <option value="4">4 - Good</option>
+            <option value="3">3 - Average</option>
+            <option value="2">2 - Poor</option>
+            <option value="1">1 - Terrible</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Comment</label>
+          <textarea rows="4" [(ngModel)]="newReview.comment" name="comment" required></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="cancel-btn" (click)="showModal = false">Cancel</button>
+          <button type="submit" class="submit-btn">Submit Review</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+

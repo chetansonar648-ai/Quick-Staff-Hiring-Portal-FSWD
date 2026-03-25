@@ -12,6 +12,7 @@ import { WorkerDashboardComponent } from './pages/worker/dashboard/dashboard';
 import { WorkerJobsComponent } from './pages/worker/jobs/jobs';
 import { WorkerLayoutComponent } from './layouts/worker-layout/worker-layout';
 import { ClientLayoutComponent } from './layouts/client-layout/client-layout';
+import { AdminLayoutComponent } from './layouts/admin-layout/admin-layout';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -43,6 +44,21 @@ export const routes: Routes = [
       { path: 'saved-workers', loadComponent: () => import('./apps/client/pages/saved-workers/saved-workers').then((m) => m.SavedWorkersComponent) },
       { path: 'profile', loadComponent: () => import('./apps/client/pages/profile/profile').then((m) => m.ClientProfileComponent) },
       { path: 'staff/:id', loadComponent: () => import('./apps/client/pages/staff-profile/staff-profile').then((m) => m.StaffProfileComponent) },
+    ],
+  },
+  {
+    path: 'admin',
+    component: AdminLayoutComponent,
+    children: [
+      { path: '', loadComponent: () => import('./apps/admin/pages/dashboard/dashboard').then((m) => m.AdminDashboardComponent) },
+      { path: 'dashboard', loadComponent: () => import('./apps/admin/pages/dashboard/dashboard').then((m) => m.AdminDashboardComponent) },
+      { path: 'workers', loadComponent: () => import('./apps/admin/pages/workers/workers').then((m) => m.AdminWorkersComponent) },
+      { path: 'clients', loadComponent: () => import('./apps/admin/pages/clients/clients').then((m) => m.AdminClientsComponent) },
+      { path: 'bookings', loadComponent: () => import('./apps/admin/pages/bookings/bookings').then((m) => m.AdminBookingsComponent) },
+      { path: 'analytics', loadComponent: () => import('./apps/admin/pages/analytics/analytics').then((m) => m.AdminAnalyticsComponent) },
+      { path: 'settings', loadComponent: () => import('./apps/admin/pages/settings/settings').then((m) => m.AdminSettingsComponent) },
+      { path: 'booking-requests', loadComponent: () => import('./apps/admin/pages/booking-requests/booking-requests').then((m) => m.AdminBookingRequestsComponent) },
+      { path: 'ratings-reviews', loadComponent: () => import('./apps/admin/pages/ratings-reviews/ratings-reviews').then((m) => m.AdminRatingsReviewsComponent) },
     ],
   },
   { path: '**', redirectTo: 'login' },
