@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 import { LoginComponent } from './pages/login/login';
-import { RegisterComponent } from './pages/auth/register/register';
+import { RegisterChoiceComponent } from './pages/auth/register-choice/register-choice';
 import { ClientRegisterComponent } from './pages/auth/client-register/client-register';
 import { WorkerRegisterComponent } from './pages/auth/worker-register/worker-register';
 import { ForgotPasswordComponent } from './pages/auth/forgot-password/forgot-password';
@@ -19,7 +19,7 @@ import { PublicLayoutComponent } from './layouts/public-layout/public-layout';
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'login-page', component: AuthLoginPageComponent },
-  { path: 'register', component: RegisterComponent },
+  { path: 'register', component: RegisterChoiceComponent },
   { path: 'register/client', component: ClientRegisterComponent },
   { path: 'register/worker', component: WorkerRegisterComponent },
   { path: 'forgot-password', component: ForgotPasswordComponent },
