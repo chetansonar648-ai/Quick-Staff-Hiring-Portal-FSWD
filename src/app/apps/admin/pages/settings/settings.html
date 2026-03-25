@@ -63,6 +63,9 @@
         <h3>🔐 Change Password</h3>
         <button class="close-btn" (click)="showPasswordModal = false">×</button>
       </div>
+      <div *ngIf="passwordError" class="error" style="margin-top: 8px; margin-bottom: 8px;">
+        {{ passwordError }}
+      </div>
       <form class="modal-form" (ngSubmit)="handleChangePassword($event)">
         <div class="form-group">
           <label>Current Password</label>

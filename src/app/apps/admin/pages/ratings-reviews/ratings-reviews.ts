@@ -33,6 +33,7 @@ export class AdminRatingsReviewsComponent {
 
   showModal = false;
   newReview: any = { bookingId: '', rating: 5, comment: '' };
+  formError = '';
 
   get averageRating(): string {
     return this.reviews && this.reviews.length > 0
@@ -78,7 +79,11 @@ export class AdminRatingsReviewsComponent {
 
   handleCreateReview(e: Event): void {
     e.preventDefault();
-    if (!this.newReview.bookingId) return alert('Select a booking');
+    this.formError = '';
+    if (!this.newReview.bookingId) {
+      this.formError = 'Select a booking';
+      return;
+    }
     const selectedBooking = this.bookings.find((b) => b.id === parseInt(this.newReview.bookingId, 10));
     if (!selectedBooking) return;
 
@@ -96,13 +101,12 @@ export class AdminRatingsReviewsComponent {
       },
     ];
 
-    alert('Review added successfully');
     this.showModal = false;
     this.newReview = { bookingId: '', rating: 5, comment: '' };
   }
 
   handleApprove(id: number): void {
-    alert(`Review #${id} approved (Mock)`);
+    // Mock action: no API wired yet.
   }
 
   handleReject(id: number): void {
@@ -115,7 +119,7 @@ export class AdminRatingsReviewsComponent {
   }
 
   handleEdit(id: number): void {
-    alert(`Edit review #${id} (Not implemented)`);
+    // Mock action: no API wired yet.
   }
 
   handleAddReview(): void {

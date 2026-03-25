@@ -65,7 +65,7 @@
     </h2>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
       <div *ngIf="loading" class="col-span-full text-center py-8 text-gray-500">Loading...</div>
-      <div *ngIf="!loading && error" class="col-span-full text-center py-8 text-red-500 hidden">{{ error }}</div>
+      <div *ngIf="!loading && error" class="col-span-full text-center py-8 text-red-500">{{ error }}</div>
       <ng-container *ngIf="!loading && !error">
         <ng-container *ngIf="recommendedStaff.length > 0; else noStaff">
           <div *ngFor="let member of recommendedStaff" class="bg-white dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden group hover:shadow-lg hover:-translate-y-1 transition-all">

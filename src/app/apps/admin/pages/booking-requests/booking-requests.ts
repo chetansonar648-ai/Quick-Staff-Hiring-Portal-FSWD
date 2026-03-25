@@ -48,7 +48,6 @@ export class AdminBookingRequestsComponent {
 
   handleAction(id: number, status: string): void {
     if (!confirm(`Are you sure you want to ${status} this request?`)) return;
-    alert(`Request ${status} successfully!`);
     this.requests = this.requests.map((r) => (r.id === id ? { ...r, status } : r));
   }
 
@@ -67,7 +66,6 @@ export class AdminBookingRequestsComponent {
         status: 'pending',
       },
     ];
-    alert('Request created successfully!');
     this.showModal = false;
     this.formData = {
       client_id: '',

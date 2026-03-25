@@ -21,6 +21,8 @@ export class StaffProfileComponent implements OnInit {
   worker: any = null;
   loading = false;
   error: string | null = null;
+  saveError: string | null = null;
+  saveSuccess = false;
   currentMonth = new Date();
   saving = false;
 
@@ -43,6 +45,8 @@ export class StaffProfileComponent implements OnInit {
   private async loadWorker(): Promise<void> {
     this.loading = true;
     this.error = null;
+    this.saveError = null;
+    this.saveSuccess = false;
     this.worker = null;
 
     const workerId = this.id ? Number(this.id) : NaN;
@@ -171,13 +175,16 @@ export class StaffProfileComponent implements OnInit {
     if (!this.worker) return;
     if (!confirm('Save this worker to your list?')) return;
 
+    this.saveError = null;
+    this.saveSuccess = false;
     this.saving = true;
     try {
       const workerId = Number(this.worker.id);
       await this.clientService.saveWorker(workerId);
-      alert('Worker saved successfully!');
+      this.saveSuccess = true;
+      setTimeout(() => (this.saveSuccess = false), 2000);
     } catch (err) {
-      alert(ClientService.errorMessage(err));
+      this.saveError = ClientService.errorMessage(err);
     } finally {
       this.saving = false;
     }

@@ -3,6 +3,8 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 
+import { AuthService } from '../../../services/auth.service';
+
 interface ChangePasswordForm {
   current_password: string;
   new_password: string;
@@ -28,10 +30,11 @@ export class ChangePasswordPageComponent {
     confirm_password: '',
   };
   errors: ChangePasswordErrors = {};
+  loading = false;
   message: string = '';
   serverError: string = '';
 
-  constructor() {}
+  constructor(private readonly authService: AuthService) {}
 
   private validate(): boolean {
     const errors: ChangePasswordErrors = {};
@@ -62,9 +65,16 @@ export class ChangePasswordPageComponent {
     this.errors = {};
 
     if (!this.validate()) return;
-    // No backend: simulate password change.
-    this.message = 'Password updated.';
-    this.form = { current_password: '', new_password: '', confirm_password: '' };
+    this.loading = true;
+    try {
+      await this.authService.changePassword(this.form.current_password, this.form.new_password);
+      this.message = 'Password updated.';
+      this.form = { current_password: '', new_password: '', confirm_password: '' };
+    } catch (err) {
+      this.serverError = AuthService.errorMessage(err);
+    } finally {
+      this.loading = false;
+    }
   }
 }
 

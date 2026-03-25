@@ -30,6 +30,7 @@ export class BrowseStaffComponent implements OnInit, OnDestroy {
   selectedWorker: any = null;
   showProfileModal = false;
   categories: BrowseCategory[] = [];
+  savingWorker = false;
 
   // Modal-only state
   activeTab = 'overview';
@@ -71,7 +72,6 @@ export class BrowseStaffComponent implements OnInit, OnDestroy {
     } catch (err) {
       this.error = ClientService.errorMessage(err);
       this.staff = [];
-      alert(this.error);
     } finally {
       this.loading = false;
     }
@@ -85,7 +85,6 @@ export class BrowseStaffComponent implements OnInit, OnDestroy {
     } catch (err) {
       this.error = ClientService.errorMessage(err);
       this.staff = [];
-      alert(this.error);
     } finally {
       this.loading = false;
     }
@@ -104,10 +103,13 @@ export class BrowseStaffComponent implements OnInit, OnDestroy {
   }
 
   async handleSaveWorker(workerId: number): Promise<void> {
+    this.savingWorker = true;
     try {
       await this.clientService.saveWorker(workerId);
     } catch (err) {
-      alert(ClientService.errorMessage(err));
+      this.error = ClientService.errorMessage(err);
+    } finally {
+      this.savingWorker = false;
     }
   }
 

@@ -49,6 +49,15 @@ export class AuthService {
     return lastValueFrom(this.http.get<MeResponse>(`${this.baseUrl}/me`));
   }
 
+  async changePassword(current_password: string, new_password: string): Promise<{ success: boolean }> {
+    return lastValueFrom(
+      this.http.post<{ success: boolean }>(`${this.baseUrl}/change-password`, {
+        current_password,
+        new_password,
+      })
+    );
+  }
+
   static errorMessage(err: unknown): string {
     if (err && typeof err === 'object' && 'error' in err) {
       const e = err as HttpErrorResponse;

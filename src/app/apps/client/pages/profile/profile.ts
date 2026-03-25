@@ -3,6 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { ClientService } from '../../../../services/client.service';
+import { AuthService } from '../../../../services/auth.service';
 
 @Component({
   selector: 'app-client-profile',
@@ -28,8 +29,15 @@ export class ClientProfileComponent implements OnInit {
     confirm_password: '',
   };
   loading = true;
+  passwordError: string | null = null;
+  passwordSuccess = false;
+  profileError: string | null = null;
+  profileSuccess = false;
 
-  constructor(private readonly clientService: ClientService) {}
+  constructor(
+    private readonly clientService: ClientService,
+    private readonly authService: AuthService,
+  ) {}
 
   ngOnInit(): void {
     void this.loadProfile();
@@ -37,6 +45,8 @@ export class ClientProfileComponent implements OnInit {
 
   private async loadProfile(): Promise<void> {
     this.loading = true;
+    this.profileError = null;
+    this.profileSuccess = false;
     try {
       const p = await this.clientService.getMyProfile();
       this.profile = {
@@ -48,7 +58,7 @@ export class ClientProfileComponent implements OnInit {
         profile_image: p.profile_image || '',
       };
     } catch (err) {
-      alert(ClientService.errorMessage(err));
+      this.profileError = ClientService.errorMessage(err);
     } finally {
       this.loading = false;
     }
@@ -56,7 +66,7 @@ export class ClientProfileComponent implements OnInit {
 
   openChangePhotoPrompt(): void {
     if (!this.isEditing) {
-      alert("Please click 'Edit Profile' first.");
+      this.profileError = "Please click 'Edit Profile' first.";
       return;
     }
     const url = prompt('Enter new profile image URL:', this.profile.profile_image || this.defaultClientAvatar);
@@ -67,6 +77,8 @@ export class ClientProfileComponent implements OnInit {
 
   async handleUpdateProfile(): Promise<void> {
     this.loading = true;
+    this.profileError = null;
+    this.profileSuccess = false;
     try {
       await this.clientService.updateMyProfile({
         name: this.profile.name,
@@ -76,26 +88,41 @@ export class ClientProfileComponent implements OnInit {
       });
 
       this.isEditing = false;
-      alert('Profile updated successfully!');
+      this.profileSuccess = true;
     } catch (err) {
-      alert(ClientService.errorMessage(err));
+      this.profileError = ClientService.errorMessage(err);
     } finally {
       this.loading = false;
     }
   }
 
   handleChangePassword(): void {
+    this.passwordError = null;
+    this.passwordSuccess = false;
+
     if (this.passwordForm.new_password !== this.passwordForm.confirm_password) {
-      alert('New passwords do not match');
+      this.passwordError = 'New passwords do not match';
       return;
     }
+    if (!this.passwordForm.new_password || this.passwordForm.new_password.length < 6) {
+      this.passwordError = 'New password must be at least 6 characters';
+      return;
+    }
+
     this.loading = true;
-    // No backend: simulate success
-    setTimeout(() => {
-      this.passwordForm = { current_password: '', new_password: '', confirm_password: '' };
-      this.loading = false;
-      alert('Password changed successfully!');
-    }, 300);
+    void this.authService
+      .changePassword(this.passwordForm.current_password, this.passwordForm.new_password)
+      .then(() => {
+        this.passwordForm = { current_password: '', new_password: '', confirm_password: '' };
+        this.passwordSuccess = true;
+        setTimeout(() => (this.passwordSuccess = false), 2000);
+      })
+      .catch((err) => {
+        this.passwordError = AuthService.errorMessage(err);
+      })
+      .finally(() => {
+        this.loading = false;
+      });
   }
 
   getProfileImageUrl(): string {

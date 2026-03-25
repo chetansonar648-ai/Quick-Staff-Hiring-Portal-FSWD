@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 
 import { environment } from '../../../../environments/environment';
 import { WorkerService, type WorkerProfileApi } from '../../../services/worker.service';
+import { AuthService } from '../../../services/auth.service';
 
 type Availability = Record<string, { start?: string; end?: string }>;
 
@@ -71,7 +72,10 @@ export class WorkerProfileComponent implements OnInit {
 
   skillInput = '';
 
-  constructor(private readonly workerService: WorkerService) {}
+  constructor(
+    private readonly workerService: WorkerService,
+    private readonly authService: AuthService,
+  ) {}
 
   ngOnInit(): void {
     void this.loadProfile();
@@ -235,15 +239,24 @@ export class WorkerProfileComponent implements OnInit {
 
     this.changingPassword = true;
 
-    // No backend: simulate change.
-    this.passwordSuccess = true;
-    this.passwordForm = { current_password: '', new_password: '', confirm_password: '' };
-    setTimeout(() => {
-      this.showPasswordModal = false;
-      this.passwordSuccess = false;
-    }, 2000);
+    try {
+      await this.authService.changePassword(
+        this.passwordForm.current_password,
+        this.passwordForm.new_password,
+      );
 
-    this.changingPassword = false;
+      this.passwordSuccess = true;
+      this.passwordForm = { current_password: '', new_password: '', confirm_password: '' };
+      setTimeout(() => {
+        this.showPasswordModal = false;
+        this.passwordSuccess = false;
+      }, 2000);
+    } catch (err) {
+      this.passwordError = AuthService.errorMessage(err);
+      this.passwordSuccess = false;
+    } finally {
+      this.changingPassword = false;
+    }
   }
 
   getInitials(name: string): string {

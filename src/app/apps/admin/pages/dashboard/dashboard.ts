@@ -36,7 +36,7 @@ export class AdminDashboardComponent {
   }
 
   handleSendNotification(): void {
-    alert('Notification sender not wired yet.');
+    // Mock action: no API wired yet.
   }
 }
 

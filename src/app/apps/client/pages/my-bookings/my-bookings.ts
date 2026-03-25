@@ -565,7 +565,7 @@ export class MyBookingsComponent implements OnInit, OnDestroy {
   submitReview(e: Event): void {
     e.preventDefault();
     if (this.reviewRating === 0) {
-      alert('Please select a rating');
+      this.addToast('Please select a rating', 'error');
       return;
     }
     this.reviewLoading = true;

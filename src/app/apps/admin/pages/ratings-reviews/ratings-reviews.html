@@ -93,6 +93,9 @@
   <div *ngIf="showModal" class="modal-overlay" (click)="showModal = false">
     <div class="modal-content" (click)="stopPropagation($event)">
       <h3>Add Manual Review</h3>
+      <div *ngIf="formError" class="error" style="margin-top: 8px; margin-bottom: 8px;">
+        {{ formError }}
+      </div>
       <form class="modal-form" (ngSubmit)="handleCreateReview($event)">
         <div class="form-group">
           <label>Select Booking</label>

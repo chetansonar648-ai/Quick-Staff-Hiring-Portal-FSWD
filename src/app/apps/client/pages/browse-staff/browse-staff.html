@@ -142,7 +142,7 @@
       <p class="text-sm text-gray-500 dark:text-gray-400">Loading staff...</p>
     </div>
 
-    <div *ngIf="error && !loading" class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 hidden">
+    <div *ngIf="error && !loading" class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
       <p class="text-sm text-yellow-800 dark:text-yellow-300">
         {{ error }} (showing design layout only)
       </p>
@@ -260,10 +260,11 @@
               <button
                 type="button"
                 (click)="handleSaveWorker(selectedWorker.id)"
+                [disabled]="savingWorker"
                 class="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-semibold rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
               >
                 <span class="material-symbols-outlined">bookmark_add</span>
-                <span>Add to Saved</span>
+                <span>{{ savingWorker ? 'Saving...' : 'Add to Saved' }}</span>
               </button>
             </div>
           </div>

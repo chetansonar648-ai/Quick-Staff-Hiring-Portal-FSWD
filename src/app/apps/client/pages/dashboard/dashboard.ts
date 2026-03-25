@@ -35,7 +35,6 @@ export class ClientDashboardComponent implements OnInit {
     } catch (err) {
       this.error = (err instanceof Error ? err.message : 'Failed to load dashboard') || null;
       this.recommendedStaff = [];
-      if (this.error) alert(this.error);
     } finally {
       this.loading = false;
     }

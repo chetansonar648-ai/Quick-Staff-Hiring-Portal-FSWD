@@ -180,7 +180,6 @@ export class AdminBookingsComponent {
         status: this.reqForm.status || 'pending',
       },
     ];
-    alert('Request created!');
     this.showReqModal = false;
     this.reqForm = {
       client_id: '',

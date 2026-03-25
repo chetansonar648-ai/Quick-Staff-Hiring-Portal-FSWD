@@ -85,7 +85,6 @@ export class SavedWorkersComponent implements OnInit {
         await this.load();
       } catch (err) {
         this.error = ClientService.errorMessage(err);
-        alert(this.error);
         this.loading = false;
       }
     }

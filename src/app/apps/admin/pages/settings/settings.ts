@@ -10,6 +10,7 @@ import { FormsModule } from '@angular/forms';
 })
 export class AdminSettingsComponent {
   showPasswordModal = false;
+  passwordError = '';
   passForm = {
     currentPassword: '',
     newPassword: '',
@@ -26,18 +27,18 @@ export class AdminSettingsComponent {
 
   handleChangePassword(e: Event): void {
     e.preventDefault();
+    this.passwordError = '';
 
     if (this.passForm.newPassword !== this.passForm.confirmPassword) {
-      alert("New passwords don't match!");
+      this.passwordError = "New passwords don't match!";
       return;
     }
 
     if (!this.passForm.currentPassword || !this.passForm.newPassword) {
-      alert('Please fill all fields');
+      this.passwordError = 'Please fill all fields';
       return;
     }
 
-    alert('Password updated successfully!');
     this.showPasswordModal = false;
     this.passForm = { currentPassword: '', newPassword: '', confirmPassword: '' };
   }
