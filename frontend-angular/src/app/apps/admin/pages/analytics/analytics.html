@@ -1,0 +1,113 @@
+<div *ngIf="loading" class="analytics-page p-8 text-center">Loading Analytics...</div>
+
+<div *ngIf="!loading" class="analytics-page">
+  <div class="page-header">
+    <h2>Analytics & Reports</h2>
+    <p>Track performance and user engagement metrics</p>
+  </div>
+
+  <div class="analytics-grid">
+    <div class="analytics-card chart-card">
+      <h3>Monthly Bookings Trend</h3>
+      <div class="chart-container">
+        <div class="chart-bars">
+          <div *ngFor="let data of chartData; let index = index" class="chart-bar-wrapper">
+            <div
+              class="chart-bar"
+              [style.height]="((toNumber(data.value) / maxValue) * 100) + '%'"
+              [attr.title]="data.value + ' Bookings'"
+            >
+              <span class="chart-value">{{ data.value }}</span>
+            </div>
+            <span class="chart-label">{{ data.month }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="analytics-card">
+      <h3>Key Metrics</h3>
+      <div class="metrics-list">
+        <div class="metric-item">
+          <div class="metric-info">
+            <span class="metric-label">Total Users</span>
+            <span class="metric-value">{{ metrics?.total_users || 0 }}</span>
+          </div>
+          <span class="metric-change positive">Workers: {{ metrics?.total_workers || 0 }}</span>
+        </div>
+        <div class="metric-item">
+          <div class="metric-info">
+            <span class="metric-label">Total Bookings</span>
+            <span class="metric-value">{{ metrics?.total_bookings || 0 }}</span>
+          </div>
+          <span class="metric-change positive">Clients: {{ metrics?.total_clients || 0 }}</span>
+        </div>
+        <div class="metric-item">
+          <div class="metric-info">
+            <span class="metric-label">Active Workers</span>
+            <span class="metric-value">{{ metrics?.total_workers || 0 }}</span>
+          </div>
+          <span class="metric-change positive">Ready to work</span>
+        </div>
+        <div class="metric-item">
+          <div class="metric-info">
+            <span class="metric-label">System Status</span>
+            <span class="metric-value" [style.color]="'green'">Operational</span>
+          </div>
+          <span class="metric-change positive">100% Uptime</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="analytics-card">
+    <h3>Top Performing Services</h3>
+    <div class="top-pages-list">
+      <p *ngIf="topServices.length === 0" class="p-4 text-gray-500">No services booked yet.</p>
+      <ng-container *ngIf="topServices.length > 0">
+        <div *ngFor="let service of topServices; let index = index" class="page-item">
+          <div class="page-rank">#{{ index + 1 }}</div>
+          <div class="page-info">
+            <span class="page-path">{{ service.name }}</span>
+            <span class="page-views">{{ service.count }} Bookings</span>
+          </div>
+          <span class="page-change positive">Popular</span>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+
+  <div class="analytics-grid">
+    <div class="analytics-card">
+      <h3>Traffic Sources (Estimated)</h3>
+      <div class="traffic-sources">
+        <ng-container *ngIf="trafficStats.length > 0; else loadingTraffic">
+          <div *ngFor="let src of trafficStats; let idx = index" class="source-item">
+            <div class="source-bar">
+              <div class="source-fill" [style.width]="src.percentage + '%'"></div>
+            </div>
+            <div class="source-info">
+              <span>{{ src.source }}</span>
+              <span>{{ src.percentage }}%</span>
+            </div>
+          </div>
+        </ng-container>
+        <ng-template #loadingTraffic><p class="text-gray-500 p-4">Loading traffic data...</p></ng-template>
+      </div>
+    </div>
+
+    <div class="analytics-card">
+      <h3>Device Breakdown</h3>
+      <div class="device-stats">
+        <div *ngFor="let d of deviceStats; let i = index" class="device-item">
+          <span class="device-icon">{{ d.device === 'Desktop' ? '💻' : d.device === 'Mobile' ? '📱' : '📲' }}</span>
+          <div class="device-details">
+            <span>{{ d.device }}</span>
+            <span class="device-percent">{{ d.percentage }}%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

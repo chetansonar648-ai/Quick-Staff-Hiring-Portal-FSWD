@@ -1,0 +1,116 @@
+<div class="flex flex-col min-h-screen bg-background-light text-text-light font-display">
+
+  <!-- Unit: Hero Section with Gradient Overlay -->
+  <section class="relative bg-background-dark py-20 px-4 sm:px-6 lg:px-8 text-white overflow-hidden">
+    <div class="absolute inset-0 z-0">
+      <div class="absolute inset-0 bg-gradient-to-r from-[#005a9c] to-[#003d6b] opacity-90"></div>
+      <img
+        src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80"
+        alt="Office meeting"
+        class="w-full h-full object-cover mix-blend-overlay"
+      />
+    </div>
+    <div class="relative z-10 max-w-4xl mx-auto text-center">
+      <h1 class="text-4xl md:text-6xl font-black tracking-tight mb-6 mt-16 text-shadow-md">
+        About Quick Staff
+      </h1>
+      <p class="text-lg md:text-xl text-blue-100 max-w-2xl mx-auto leading-relaxed">
+        Connecting skilled professionals with businesses, seamlessly and efficiently. We are revolutionizing the gig economy, one job at a time.
+      </p>
+    </div>
+  </section>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full -mt-10 relative z-20">
+    <!-- Unit: Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-20 text-center">
+      <div *ngFor="let stat of stats" class="bg-white rounded-xl shadow-xl p-8 border border-gray-100 transform transition-transform hover:-translate-y-1">
+        <div class="text-4xl font-black text-secondary mb-2">{{ stat.value }}</div>
+        <div class="text-subtle-light font-medium uppercase tracking-wide text-sm">{{ stat.label }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+    <!-- Unit: Our Journey -->
+    <section class="mb-24">
+      <div class="bg-white rounded-2xl shadow-sm border border-border-light overflow-hidden">
+        <div class="grid md:grid-cols-2 gap-0">
+          <div class="p-8 md:p-12 flex flex-col justify-center order-2 md:order-1">
+            <h2 class="text-3xl font-bold mb-6 text-primary">Our Journey</h2>
+            <div class="space-y-4 text-subtle-light text-lg leading-relaxed">
+              <p>
+                Founded in 2021, Quick Staff Hiring Portal was born from a simple observation: the traditional hiring process was too slow for on-demand services. We bridge the gap between businesses needing immediate quality staff and skilled gig workers seeking flexible opportunities.
+              </p>
+              <p>
+                We leverage technology to create a trusted community where connections are instant and work gets done efficiently. Today, thousands of users find work and hire talent on their own terms.
+              </p>
+            </div>
+          </div>
+          <div class="relative h-64 md:h-auto order-1 md:order-2">
+            <img
+              alt="Workers Team"
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuBLJd94Q3F3xSI8LUeqAMSI876PsjZ5qnD5XGmcOk_WQ5iNZXmp5yOHXWB_Bs_Naf_-WFGdxjIGoCUD5O0x_17RRskl3CG8nKaYnQnb8Sv2uBbi0NaHXmaJ6vyOyaCaawPGa57qssUEXYzst25EuhsNruaX_sgPbPm6Hgw1VDE0LfC_u9yC2YTPpshCAaLWanY9BEktseT27D1hiB2TZcsFz7GIpXg0gTdfAK15jbFK5yHiCbaVcEMyOyMXOMpboK9eGXeWaK2fvA"
+              class="absolute inset-0 w-full h-full object-cover"
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Unit: Mission, Vision, Values -->
+    <section class="mb-24 text-center">
+      <div class="mb-12">
+        <h2 class="text-3xl font-bold mb-4">Our Mission, Vision, and Values</h2>
+        <p class="text-subtle-light max-w-2xl mx-auto text-lg">The principles that guide our every decision.</p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div *ngFor="let item of values" class="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+          <div class="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-6 text-primary">
+            <span class="material-symbols-outlined text-4xl">{{ item.icon }}</span>
+          </div>
+          <h3 class="text-xl font-bold mb-3 text-text-light">{{ item.title }}</h3>
+          <p class="text-subtle-light leading-relaxed">{{ item.body }}</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Unit: Meet the Team -->
+    <section class="mb-24">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl font-bold mb-4">Meet the Team</h2>
+        <p class="text-subtle-light text-lg">The passionate minds behind Quick Staff Hiring Portal.</p>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+        <div *ngFor="let person of team" class="flex flex-col items-center group">
+          <div class="w-40 h-40 mb-6 relative rounded-full overflow-hidden shadow-lg border-4 border-white group-hover:scale-105 transition-transform duration-300">
+            <img [src]="person.img" [attr.alt]="person.name" class="w-full h-full object-cover" />
+          </div>
+          <h3 class="text-lg font-bold text-text-light">{{ person.name }}</h3>
+          <p class="text-primary font-medium text-sm">{{ person.title }}</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Unit: CTA -->
+    <section class="bg-primary rounded-3xl p-12 text-center text-white shadow-2xl shadow-blue-900/20 mb-20 relative overflow-hidden">
+      <div class="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl"></div>
+      <div class="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl"></div>
+
+      <div class="relative z-10">
+        <h2 class="text-3xl md:text-4xl font-bold mb-6">Join Our Community</h2>
+        <p class="text-blue-100 text-lg mb-10 max-w-2xl mx-auto">
+          Whether you're hiring or finding gigs, get started today and experience the difference.
+        </p>
+        <div class="flex flex-col sm:flex-row justify-center gap-4">
+          <a routerLink="/register/client" class="inline-flex items-center justify-center px-8 py-4 bg-secondary text-white rounded-xl font-bold text-lg hover:bg-green-600 transition-colors shadow-lg shadow-green-900/10">
+            I want to HIRE
+          </a>
+          <a routerLink="/register/worker" class="inline-flex items-center justify-center px-8 py-4 bg-white text-primary rounded-xl font-bold text-lg hover:bg-blue-50 transition-colors shadow-lg">
+            I want to WORK
+          </a>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
