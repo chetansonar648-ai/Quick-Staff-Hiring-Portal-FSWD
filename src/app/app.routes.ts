@@ -10,6 +10,7 @@ import { ResetPasswordPageComponent } from './pages/auth/reset-password/reset-pa
 import { ChangePasswordPageComponent } from './pages/auth/change-password/change-password';
 import { WorkerDashboardComponent } from './pages/worker/dashboard/dashboard';
 import { WorkerJobsComponent } from './pages/worker/jobs/jobs';
+import { WorkerLayoutComponent } from './layouts/worker-layout/worker-layout';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -22,7 +23,14 @@ export const routes: Routes = [
   { path: 'verify-email', component: VerifyEmailPageComponent },
   { path: 'reset-password', component: ResetPasswordPageComponent },
   { path: 'change-password', component: ChangePasswordPageComponent },
-  { path: 'worker/dashboard', component: WorkerDashboardComponent },
-  { path: 'worker/jobs', component: WorkerJobsComponent },
+  {
+    path: 'worker',
+    component: WorkerLayoutComponent,
+    children: [
+      { path: 'dashboard', loadComponent: () => import('./pages/worker/dashboard/dashboard').then((m) => m.WorkerDashboardComponent) },
+      { path: 'jobs', loadComponent: () => import('./pages/worker/jobs/jobs').then((m) => m.WorkerJobsComponent) },
+      { path: 'profile', loadComponent: () => import('./pages/worker/profile/profile').then((m) => m.WorkerProfileComponent) },
+    ],
+  },
   { path: '**', redirectTo: 'login' },
 ];
