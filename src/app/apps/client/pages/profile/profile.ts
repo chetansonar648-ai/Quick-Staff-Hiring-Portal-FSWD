@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+
+import { ClientService } from '../../../../services/client.service';
 
 @Component({
   selector: 'app-client-profile',
@@ -8,7 +10,7 @@ import { FormsModule } from '@angular/forms';
   imports: [CommonModule, FormsModule],
   templateUrl: './profile.html',
 })
-export class ClientProfileComponent {
+export class ClientProfileComponent implements OnInit {
   defaultClientAvatar = 'https://via.placeholder.com/256';
 
   activeTab = 'profile';
@@ -25,7 +27,32 @@ export class ClientProfileComponent {
     new_password: '',
     confirm_password: '',
   };
-  loading = false;
+  loading = true;
+
+  constructor(private readonly clientService: ClientService) {}
+
+  ngOnInit(): void {
+    void this.loadProfile();
+  }
+
+  private async loadProfile(): Promise<void> {
+    this.loading = true;
+    try {
+      const p = await this.clientService.getMyProfile();
+      this.profile = {
+        ...this.profile,
+        name: p.name || 'Client',
+        email: p.email || '',
+        phone: p.phone || '',
+        address: p.address || '',
+        profile_image: p.profile_image || '',
+      };
+    } catch (err) {
+      alert(ClientService.errorMessage(err));
+    } finally {
+      this.loading = false;
+    }
+  }
 
   openChangePhotoPrompt(): void {
     if (!this.isEditing) {
@@ -38,14 +65,23 @@ export class ClientProfileComponent {
     }
   }
 
-  handleUpdateProfile(): void {
+  async handleUpdateProfile(): Promise<void> {
     this.loading = true;
-    // No backend: simulate success
-    setTimeout(() => {
+    try {
+      await this.clientService.updateMyProfile({
+        name: this.profile.name,
+        phone: this.profile.phone,
+        address: this.profile.address,
+        profile_image: this.profile.profile_image,
+      });
+
       this.isEditing = false;
-      this.loading = false;
       alert('Profile updated successfully!');
-    }, 300);
+    } catch (err) {
+      alert(ClientService.errorMessage(err));
+    } finally {
+      this.loading = false;
+    }
   }
 
   handleChangePassword(): void {

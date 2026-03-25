@@ -2,6 +2,9 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
+import { ClientService } from '../../../../services/client.service';
+import { WorkerService } from '../../../../services/worker.service';
+
 type AvailabilityEntry = { day_of_week: number | string; is_available: boolean };
 
 @Component({
@@ -27,51 +30,53 @@ export class StaffProfileComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     public router: Router,
+    private readonly workerService: WorkerService,
+    private readonly clientService: ClientService,
   ) {}
 
   ngOnInit(): void {
     this.id = this.route.snapshot.paramMap.get('id');
 
-    // No backend: mock worker
-    this.worker = {
-      id: this.id || '1',
-      name: 'Ava Johnson',
-      role: 'Cleaning',
-      rating: 4.9,
-      rating_count: 124,
-      description: 'Reliable and detail-oriented with strong communication and punctuality.',
-      about: '',
-      skills: [{ skill_name: 'Deep cleaning' }, { skill_name: 'Move-out cleaning' }, { skill_name: 'Laundry' }],
-      reviews: [
-        {
-          client_name: 'Jordan',
-          client_image: this.defaultClientAvatar,
-          created_at: '2026-02-11',
-          rating: 5,
-          comment: 'Excellent service. Very professional and thorough.',
-        },
-        {
-          client_name: 'Sam',
-          client_image: this.defaultClientAvatar,
-          created_at: '2026-01-22',
-          rating: 4,
-          comment: 'Great job overall. Would book again.',
-        },
-      ],
-      availability: [
-        { day_of_week: 1, is_available: true },
-        { day_of_week: 2, is_available: true },
-        { day_of_week: 3, is_available: true },
-        { day_of_week: 4, is_available: true },
-        { day_of_week: 5, is_available: true },
-      ] as AvailabilityEntry[],
-      booked_dates: ['2026-03-08', '2026-03-18'],
-      image_url: this.defaultWorkerAvatar,
-      hourly_rate: 25,
-      total_jobs_completed: 31,
-    };
+    void this.loadWorker();
+  }
 
-    this.rebuildCalendar();
+  private async loadWorker(): Promise<void> {
+    this.loading = true;
+    this.error = null;
+    this.worker = null;
+
+    const workerId = this.id ? Number(this.id) : NaN;
+    if (!workerId || Number.isNaN(workerId)) {
+      this.loading = false;
+      this.error = 'Invalid worker id';
+      return;
+    }
+
+    try {
+      const p = await this.workerService.getWorkerProfile(workerId);
+      this.worker = {
+        id: this.id,
+        name: p?.name,
+        role: p?.role,
+        rating: p?.rating,
+        rating_count: p?.rating_count,
+        description: p?.description,
+        about: p?.description,
+        skills: Array.isArray(p?.skills) ? (p.skills as string[]).map((s) => ({ skill_name: s })) : [],
+        reviews: (p as any)?.reviews || [],
+        availability: p?.availability,
+        booked_dates: (p as any)?.booked_dates || [],
+        image_url: p?.image_url || this.defaultWorkerAvatar,
+        hourly_rate: p?.hourly_rate,
+        total_jobs_completed: p?.completed_jobs ?? 0,
+      };
+    } catch (err) {
+      this.error = WorkerService.errorMessage(err);
+      this.worker = null;
+    } finally {
+      this.loading = false;
+      this.rebuildCalendar();
+    }
   }
 
   nextMonth(): void {
@@ -105,12 +110,25 @@ export class StaffProfileComponent implements OnInit {
 
   isDateAvailable(date: Date): boolean {
     const availability = this.worker?.availability;
-    if (!availability || !Array.isArray(availability)) return false;
-    const dayOfWeek = date.getDay(); // 0-6
-    const availEntry = (availability as AvailabilityEntry[]).find(
-      (a) => a.day_of_week === dayOfWeek || a.day_of_week === String(dayOfWeek),
-    );
-    return !!(availEntry && availEntry.is_available);
+    if (!availability) return false;
+
+    if (Array.isArray(availability)) {
+      const dayOfWeek = date.getDay(); // 0-6
+      const availEntry = (availability as AvailabilityEntry[]).find(
+        (a) => a.day_of_week === dayOfWeek || a.day_of_week === String(dayOfWeek),
+      );
+      return !!(availEntry && availEntry.is_available);
+    }
+
+    // Backend stores availability as an object keyed by day names (e.g., "Monday").
+    if (typeof availability === 'object') {
+      const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] as const;
+      const dayName = dayNames[date.getDay()];
+      const entry = (availability as Record<string, { start?: string; end?: string }>)[dayName];
+      return !!(entry && (entry.start || entry.end));
+    }
+
+    return false;
   }
 
   dayClass(date: Date): string {
@@ -149,14 +167,20 @@ export class StaffProfileComponent implements OnInit {
     return Number.isNaN(d.getTime()) ? 'Recent' : d.toLocaleDateString();
   }
 
-  handleAddToSaved(): void {
+  async handleAddToSaved(): Promise<void> {
     if (!this.worker) return;
     if (!confirm('Save this worker to your list?')) return;
+
     this.saving = true;
-    setTimeout(() => {
-      this.saving = false;
+    try {
+      const workerId = Number(this.worker.id);
+      await this.clientService.saveWorker(workerId);
       alert('Worker saved successfully!');
-    }, 300);
+    } catch (err) {
+      alert(ClientService.errorMessage(err));
+    } finally {
+      this.saving = false;
+    }
   }
 }
 

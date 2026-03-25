@@ -3,6 +3,8 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 
+import { AuthService } from '../../../services/auth.service';
+
 interface LoginForm {
   email: string;
   password: string;
@@ -11,11 +13,6 @@ interface LoginForm {
 interface LoginErrors {
   email?: string;
   password?: string;
-}
-
-interface LoginResponse {
-  token?: string;
-  user?: { role?: string };
 }
 
 @Component({
@@ -28,9 +25,11 @@ export class AuthLoginPageComponent {
   form: LoginForm = { email: '', password: '' };
   errors: LoginErrors = {};
   serverError: string = '';
+  loading = false;
 
   constructor(
     private readonly router: Router,
+    private readonly authService: AuthService,
   ) {}
 
   private validate(): boolean {
@@ -56,13 +55,24 @@ export class AuthLoginPageComponent {
 
     if (!this.validate()) return;
 
-    // No backend: simulate a successful login.
-    const simulatedToken = 'mock-token';
-    localStorage.setItem('token', simulatedToken);
-    localStorage.setItem('qs_token', simulatedToken);
-    localStorage.setItem('qs_user', JSON.stringify({ role: 'worker' }));
+    if (this.loading) return;
+    this.loading = true;
+    try {
+      const res = await this.authService.login(this.form.email, this.form.password);
+      const role = res?.user?.role;
 
-      this.router.navigate(['/worker/dashboard']);
+      if (role === 'admin') {
+        await this.router.navigate(['/admin']);
+      } else if (role === 'client') {
+        await this.router.navigate(['/client']);
+      } else {
+        await this.router.navigate(['/worker/dashboard']);
+      }
+    } catch (err) {
+      this.serverError = AuthService.errorMessage(err);
+    } finally {
+      this.loading = false;
+    }
   }
 }
 

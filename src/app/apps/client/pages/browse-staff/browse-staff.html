@@ -90,7 +90,7 @@
       <div class="flex justify-end gap-2">
         <button
           type="button"
-          (click)="filters = { search: '', location: '', category: '', min_price: '', max_price: '', min_rating: '' }"
+          (click)="handleClearFilters()"
           class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
         >
           Clear Filters

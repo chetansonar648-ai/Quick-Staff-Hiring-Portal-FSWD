@@ -1,6 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { Component, ElementRef, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+
+import { environment } from '../../../../environments/environment';
+import { WorkerService, type WorkerProfileApi } from '../../../services/worker.service';
 
 type Availability = Record<string, { start?: string; end?: string }>;
 
@@ -12,10 +15,10 @@ const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
   imports: [CommonModule, FormsModule],
   templateUrl: './profile.html',
 })
-export class WorkerProfileComponent {
+export class WorkerProfileComponent implements OnInit {
   days = days;
 
-  loading = false;
+  loading = true;
   saving = false;
   error: string | null = null;
   success = false;
@@ -67,6 +70,46 @@ export class WorkerProfileComponent {
   };
 
   skillInput = '';
+
+  constructor(private readonly workerService: WorkerService) {}
+
+  ngOnInit(): void {
+    void this.loadProfile();
+  }
+
+  private async loadProfile(): Promise<void> {
+    this.loading = true;
+    this.error = null;
+    this.success = false;
+    try {
+      const p = await this.workerService.getMyProfile();
+      this.applyProfileFromApi(p);
+    } catch (err) {
+      this.error = WorkerService.errorMessage(err);
+    } finally {
+      this.loading = false;
+    }
+  }
+
+  private applyProfileFromApi(p: WorkerProfileApi | null | undefined): void {
+    this.profile = {
+      name: p?.name || '',
+      email: p?.email || '',
+      phone: p?.phone || '',
+      title: p?.role || '',
+      years_of_experience: p?.years_of_experience != null ? String(p.years_of_experience) : '',
+      bio: p?.description || '',
+      address: p?.address || '',
+      service_location: p?.service_location || p?.location || '',
+      skills: Array.isArray(p?.skills) ? (p?.skills as string[]) : [],
+      hourly_rate: p?.hourly_rate != null ? String(p.hourly_rate) : '',
+      availability: (p?.availability as Availability) || {},
+      rating: p?.rating ?? 0,
+      total_reviews: p?.rating_count ?? 0,
+      completed_jobs: p?.completed_jobs ?? 0,
+      profile_picture: p?.image_url || '',
+    };
+  }
 
   updateField(field: keyof WorkerProfileComponent['profile'], value: any): void {
     (this.profile as any)[field] = value;
@@ -122,10 +165,30 @@ export class WorkerProfileComponent {
     this.error = null;
     this.success = false;
 
-    // No backend: simulate save.
-    this.success = true;
-    setTimeout(() => (this.success = false), 3000);
-    this.saving = false;
+    try {
+      const hourlyRate = this.profile.hourly_rate ? parseFloat(this.profile.hourly_rate) : undefined;
+      const years = this.profile.years_of_experience ? parseInt(this.profile.years_of_experience, 10) : undefined;
+
+      await this.workerService.updateMyProfile({
+        name: this.profile.name,
+        phone: this.profile.phone || '',
+        bio: this.profile.bio,
+        skills: this.profile.skills,
+        hourly_rate: hourlyRate,
+        availability: this.profile.availability,
+        title: this.profile.title,
+        years_of_experience: years,
+        address: this.profile.address,
+        service_location: this.profile.service_location,
+      });
+
+      this.success = true;
+      setTimeout(() => (this.success = false), 3000);
+    } catch (err) {
+      this.error = WorkerService.errorMessage(err);
+    } finally {
+      this.saving = false;
+    }
   }
 
   triggerFileSelect(): void {
@@ -140,13 +203,21 @@ export class WorkerProfileComponent {
     this.uploading = true;
     this.error = null;
 
-    // No backend: preview locally.
+    // Preview instantly for better UX.
     const url = URL.createObjectURL(file);
     this.updateField('profile_picture', url);
 
-    this.success = true;
-    setTimeout(() => (this.success = false), 3000);
-    this.uploading = false;
+    try {
+      const res = await this.workerService.uploadProfilePicture(file);
+      this.updateField('profile_picture', res.profile_image);
+
+      this.success = true;
+      setTimeout(() => (this.success = false), 3000);
+    } catch (err) {
+      this.error = WorkerService.errorMessage(err);
+    } finally {
+      this.uploading = false;
+    }
   }
 
   async handlePasswordChange(): Promise<void> {
@@ -188,7 +259,7 @@ export class WorkerProfileComponent {
   getProfilePictureUrl(): string | null {
     if (this.profile.profile_picture) {
       if (this.profile.profile_picture.startsWith('/uploads')) {
-        return `http://localhost:4001${this.profile.profile_picture}`;
+        return `${environment.apiBaseUrl}${this.profile.profile_picture}`;
       }
       return this.profile.profile_picture;
     }

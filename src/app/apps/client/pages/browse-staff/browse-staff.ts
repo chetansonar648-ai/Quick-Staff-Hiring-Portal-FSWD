@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 
-type Category = { category: string; count: number };
+import { ClientService, type BrowseCategory, type StaffCard } from '../../../../services/client.service';
 
 @Component({
   selector: 'app-browse-staff',
@@ -15,8 +15,8 @@ type Category = { category: string; count: number };
 export class BrowseStaffComponent implements OnInit, OnDestroy {
   defaultWorkerAvatar = 'https://via.placeholder.com/400x300';
 
-  staff: any[] = [];
-  loading = false;
+  staff: StaffCard[] = [];
+  loading = true;
   error: string | null = null;
   filters = {
     search: '',
@@ -29,17 +29,19 @@ export class BrowseStaffComponent implements OnInit, OnDestroy {
   showFilters = false;
   selectedWorker: any = null;
   showProfileModal = false;
-  categories: Category[] = [];
+  categories: BrowseCategory[] = [];
 
   // Modal-only state
   activeTab = 'overview';
   workerDetails: any = null;
 
   private sub?: Subscription;
+  private filterFetchTimeout: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
     public router: Router,
     private route: ActivatedRoute,
+    private readonly clientService: ClientService,
   ) {}
 
   ngOnInit(): void {
@@ -50,7 +52,7 @@ export class BrowseStaffComponent implements OnInit, OnDestroy {
         category: params.get('category') || '',
       };
       this.showFilters = params.get('showFilters') === 'true';
-      this.seedMockData();
+      void this.loadCategoriesAndStaff();
     });
   }
 
@@ -58,40 +60,55 @@ export class BrowseStaffComponent implements OnInit, OnDestroy {
     this.sub?.unsubscribe();
   }
 
-  seedMockData(): void {
-    // No backend: static mock categories + staff.
-    this.categories = [
-      { category: 'Cleaning', count: 12 },
-      { category: 'Plumbing', count: 5 },
-      { category: 'Electrical', count: 7 },
-      { category: 'Construction', count: 3 },
-      { category: 'Marketing', count: 4 },
-      { category: 'Event Staff', count: 10 },
-      { category: 'Hospitality', count: 8 },
-      { category: 'Administrative', count: 6 },
-      { category: 'Warehouse', count: 9 },
-      { category: 'Retail', count: 11 },
-      { category: 'Delivery', count: 2 },
-    ];
+  private async loadCategoriesAndStaff(): Promise<void> {
+    this.loading = true;
+    this.error = null;
+    try {
+      if (this.categories.length === 0) {
+        this.categories = await this.clientService.getBrowseCategories();
+      }
+      this.staff = await this.clientService.getBrowseStaff(this.filters);
+    } catch (err) {
+      this.error = ClientService.errorMessage(err);
+      this.staff = [];
+      alert(this.error);
+    } finally {
+      this.loading = false;
+    }
+  }
 
-    this.staff = [
-      { id: 101, name: 'Ava Johnson', role: 'Cleaning', rating: 4.9, rating_count: 124, hourly_rate: 25, image_url: 'https://via.placeholder.com/400x300' },
-      { id: 102, name: 'Noah Smith', role: 'Plumbing', rating: 4.7, rating_count: 89, hourly_rate: 35, image_url: 'https://via.placeholder.com/400x300' },
-      { id: 103, name: 'Mia Chen', role: 'Electrical', rating: 4.8, rating_count: 52, hourly_rate: 40, image_url: 'https://via.placeholder.com/400x300' },
-      { id: 104, name: 'Liam Patel', role: 'Event Staff', rating: 4.6, rating_count: 41, hourly_rate: 22, image_url: 'https://via.placeholder.com/400x300' },
-    ];
+  private async loadStaffOnly(): Promise<void> {
+    this.loading = true;
+    this.error = null;
+    try {
+      this.staff = await this.clientService.getBrowseStaff(this.filters);
+    } catch (err) {
+      this.error = ClientService.errorMessage(err);
+      this.staff = [];
+      alert(this.error);
+    } finally {
+      this.loading = false;
+    }
   }
 
   handleFilterChange(key: keyof BrowseStaffComponent['filters'], value: string): void {
     this.filters = { ...this.filters, [key]: value };
+    if (this.filterFetchTimeout) clearTimeout(this.filterFetchTimeout);
+    this.filterFetchTimeout = setTimeout(() => {
+      void this.loadStaffOnly();
+    }, 300);
   }
 
   handleViewProfile(workerId: number): void {
     this.router.navigate(['/client/staff', workerId]);
   }
 
-  handleSaveWorker(_workerId: number): void {
-    // No backend: noop.
+  async handleSaveWorker(workerId: number): Promise<void> {
+    try {
+      await this.clientService.saveWorker(workerId);
+    } catch (err) {
+      alert(ClientService.errorMessage(err));
+    }
   }
 
   getCategoryIcon(category: string): string {
@@ -127,6 +144,14 @@ export class BrowseStaffComponent implements OnInit, OnDestroy {
     this.showProfileModal = false;
     this.selectedWorker = null;
     this.workerDetails = null;
+  }
+
+  handleClearFilters(): void {
+    this.filters = { search: '', location: '', category: '', min_price: '', max_price: '', min_rating: '' };
+    if (this.filterFetchTimeout) clearTimeout(this.filterFetchTimeout);
+    this.filterFetchTimeout = setTimeout(() => {
+      void this.loadStaffOnly();
+    }, 300);
   }
 
   repeatFilledStars(rating: number): string {

@@ -51,6 +51,7 @@ export const routes: Routes = [
     children: [
       { path: 'dashboard', loadComponent: () => import('./pages/worker/dashboard/dashboard').then((m) => m.WorkerDashboardComponent) },
       { path: 'jobs', loadComponent: () => import('./pages/worker/jobs/jobs').then((m) => m.WorkerJobsComponent) },
+      { path: 'saved-clients', loadComponent: () => import('./pages/worker/saved-clients/saved-clients').then((m) => m.SavedClientsComponent) },
       { path: 'profile', loadComponent: () => import('./pages/worker/profile/profile').then((m) => m.WorkerProfileComponent) },
     ],
   },

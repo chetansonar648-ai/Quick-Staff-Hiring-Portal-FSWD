@@ -1,7 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+
+import { ClientService, type StaffCard } from '../../../../services/client.service';
 
 @Component({
   selector: 'app-client-dashboard',
@@ -9,32 +11,35 @@ import { Router } from '@angular/router';
   imports: [CommonModule, FormsModule],
   templateUrl: './dashboard.html',
 })
-export class ClientDashboardComponent {
-  constructor(public router: Router) {}
+export class ClientDashboardComponent implements OnInit {
+  constructor(public router: Router, private readonly clientService: ClientService) {}
 
-  stats = {
-    active: 2,
-    completed: 8,
-    pendingReviews: 1,
-  };
+  stats = { active: 0, completed: 0, pendingReviews: 0 };
 
-  recommendedStaff: Array<{
-    id: number;
-    name: string;
-    role: string;
-    rating: number;
-    rating_count: number;
-    image_url?: string;
-  }> = [
-    { id: 1, name: 'Ava Johnson', role: 'House Cleaning', rating: 4.9, rating_count: 124, image_url: 'https://via.placeholder.com/400x240' },
-    { id: 2, name: 'Noah Smith', role: 'Plumbing', rating: 4.7, rating_count: 89, image_url: 'https://via.placeholder.com/400x240' },
-    { id: 3, name: 'Mia Chen', role: 'Electrical Repair', rating: 4.8, rating_count: 52, image_url: 'https://via.placeholder.com/400x240' },
-    { id: 4, name: 'Liam Patel', role: 'Gardening & Landscaping', rating: 4.6, rating_count: 41, image_url: 'https://via.placeholder.com/400x240' },
-  ];
+  recommendedStaff: StaffCard[] = [];
 
-  loading = false;
+  loading = true;
   error: string | null = null;
   searchQuery = '';
+
+  async ngOnInit(): Promise<void> {
+    this.loading = true;
+    this.error = null;
+    try {
+      const [stats, recommended] = await Promise.all([
+        this.clientService.getClientStats(),
+        this.clientService.getRecommendedStaff(4),
+      ]);
+      this.stats = stats;
+      this.recommendedStaff = recommended;
+    } catch (err) {
+      this.error = (err instanceof Error ? err.message : 'Failed to load dashboard') || null;
+      this.recommendedStaff = [];
+      if (this.error) alert(this.error);
+    } finally {
+      this.loading = false;
+    }
+  }
 
   handleCategoryClick(category: string): void {
     this.router.navigate(['/client/browse-staff'], { queryParams: { category } });

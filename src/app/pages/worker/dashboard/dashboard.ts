@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { Subscription, filter } from 'rxjs';
 
+import { WorkerService, type WorkerJob, type WorkerStats } from '../../../services/worker.service';
+
 @Component({
   selector: 'app-worker-dashboard',
   standalone: true,
@@ -11,36 +13,11 @@ import { Subscription, filter } from 'rxjs';
   templateUrl: './dashboard.html',
 })
 export class WorkerDashboardComponent implements OnInit, OnDestroy {
-  stats: any = { total_reviews: 12, completed_jobs: 7, rating: 4.6 };
-  user: any = {
-    name: 'Alex Johnson',
-    profile_image: '',
-  };
-  schedule: any[] = [
-    {
-      id: 1,
-      service_name: 'Cleaning',
-      client_name: 'Jane Doe',
-      booking_date: '2026-03-20T12:00:00Z',
-      status: 'pending',
-    },
-    {
-      id: 2,
-      service_name: 'Driver',
-      client_name: 'Bob Smith',
-      booking_date: '2026-03-22T15:30:00Z',
-      status: 'accepted',
-    },
-  ];
-  history: any[] = [
-    {
-      id: 3,
-      service_name: 'Cooking',
-      client_name: 'Sarah Lee',
-      booking_date: '2026-02-10T11:00:00Z',
-      status: 'completed',
-    },
-  ];
+  loading = true;
+  stats: WorkerStats = { total_reviews: 0, completed_jobs: 0, rating: 0 };
+  user: { name: string; profile_image?: string } = { name: '', profile_image: '' };
+  schedule: WorkerJob[] = [];
+  history: WorkerJob[] = [];
   activeTab: 'scheduled' | 'history' = 'scheduled';
   error: string | null = null;
   private currentPath: string = '';
@@ -48,6 +25,7 @@ export class WorkerDashboardComponent implements OnInit, OnDestroy {
 
   constructor(
     private readonly router: Router,
+    private readonly workerService: WorkerService,
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -57,6 +35,8 @@ export class WorkerDashboardComponent implements OnInit, OnDestroy {
       .subscribe((e) => {
         this.currentPath = e.urlAfterRedirects.split('?')[0];
       });
+
+    void this.loadDashboardData();
   }
 
   ngOnDestroy(): void {
@@ -84,6 +64,35 @@ export class WorkerDashboardComponent implements OnInit, OnDestroy {
 
   get currentJobs(): any[] {
     return this.activeTab === 'scheduled' ? this.schedule : this.history;
+  }
+
+  private async loadDashboardData(): Promise<void> {
+    this.loading = true;
+    this.error = null;
+    try {
+      const [stats, pendingJobs, activeJobs, historyJobs] = await Promise.all([
+        this.workerService.getStats(),
+        this.workerService.getJobs('pending'),
+        this.workerService.getJobs('active'),
+        this.workerService.getJobs('history'),
+      ]);
+
+      // "Scheduled" in UI includes pending + accepted/active jobs.
+      const combined = [...(pendingJobs || []), ...(activeJobs || [])];
+      this.schedule = combined.sort((a, b) => new Date(b.booking_date || '').getTime() - new Date(a.booking_date || '').getTime());
+      this.history = historyJobs || [];
+      this.stats = stats || this.stats;
+
+      // We reuse `getMyProfile` to show the user's name in the header.
+      const profile = await this.workerService.getMyProfile();
+      this.user = { name: profile?.name || '', profile_image: profile?.image_url };
+    } catch (err) {
+      this.error = WorkerService.errorMessage(err);
+      this.schedule = [];
+      this.history = [];
+    } finally {
+      this.loading = false;
+    }
   }
 }
 

@@ -20,7 +20,10 @@
             </p>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <div *ngIf="loading" class="text-center text-gray-500 py-10">Loading dashboard...</div>
+          <div *ngIf="!loading && error" class="text-center text-red-500 py-10">{{ error }}</div>
+
+          <div *ngIf="!loading && !error" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             <div class="flex flex-col gap-2 rounded-xl p-6 bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
               <p class="text-[#111618] dark:text-gray-300 text-base font-medium leading-normal">Total Reviews</p>
               <p class="text-[#111618] dark:text-white tracking-light text-3xl font-bold leading-tight">
@@ -44,7 +47,7 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div *ngIf="!loading && !error" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div class="lg:col-span-3 bg-white dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700">
               <div class="pb-3">
                 <div class="flex border-b border-gray-200 dark:border-gray-700 px-6 gap-8">
@@ -81,11 +84,11 @@
                     <div class="text-[#111618] dark:text-gray-300 flex items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-700 shrink-0 size-12">
                       <span class="material-symbols-outlined">
                         {{
-                          job.service_name?.toLowerCase().includes('clean')
+                          (job.service_name?.toLowerCase() || '').includes('clean')
                             ? 'cleaning_services'
-                            : job.service_name?.toLowerCase().includes('driver')
+                            : (job.service_name?.toLowerCase() || '').includes('driver')
                               ? 'local_shipping'
-                              : job.service_name?.toLowerCase().includes('cook')
+                              : (job.service_name?.toLowerCase() || '').includes('cook')
                                 ? 'restaurant'
                                 : 'calendar_month'
                         }}
