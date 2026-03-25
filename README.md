@@ -86,7 +86,7 @@ Quick-Staff-Hiring-Portal/
 ### 1️⃣ Clone the repository
 
 ```
-git clone https://github.com/your-username/Quick-Staff-Hiring-Portal-FSWD.git
+git clone https://github.com/chetansonar648-ai/Quick-Staff-Hiring-Portal-FSWD.git
 ```
 
 ---
