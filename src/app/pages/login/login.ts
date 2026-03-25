@@ -1,51 +1,57 @@
-import { Component } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Router } from '@angular/router';
-import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { Component } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { Router, RouterModule } from '@angular/router';
+
+interface LoginResponse {
+  token?: string;
+  user: {
+    role: string;
+  };
+}
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [FormsModule, CommonModule],   // ✅ ADD THIS
-  templateUrl: './login.html'
+  imports: [CommonModule, FormsModule, RouterModule],
+  templateUrl: './login.html',
 })
 export class LoginComponent {
+  // The React version loads this from a bundled asset import.
+  // In Angular we keep it as a static path (it may be missing at runtime, but it won't break compilation).
+  loginBg: string = 'assets/login_background.png';
 
-  form = {
-    email: '',
-    password: ''
-  };
+  form: { email: string; password: string } = { email: '', password: '' };
+  error: string = '';
+  loading: boolean = false;
+  showPassword: boolean = false;
 
-  error = '';
-  loading = false;
-  showPassword = false;
+  constructor(private readonly router: Router) {}
 
-  constructor(private http: HttpClient, private router: Router) {}
+  toggleShowPassword(): void {
+    this.showPassword = !this.showPassword;
+  }
 
-  onSubmit() {
-    this.loading = true;
+  async onSubmit(): Promise<void> {
     this.error = '';
+    // No backend: simulate a successful login without changing the UI layout.
+    this.loading = false;
 
-    this.http.post<any>('http://localhost:5000/api/auth/login', this.form)
-      .subscribe({
-        next: (data) => {
-          const role = data.user.role;
+    const simulatedToken = 'mock-token';
+    localStorage.setItem('token', simulatedToken);
+    localStorage.setItem('qs_token', simulatedToken);
 
-          if (role === 'admin') {
-            this.router.navigate(['/admin']);
-          } else if (role === 'client') {
-            this.router.navigate(['/client']);
-          } else if (role === 'worker') {
-            this.router.navigate(['/worker/dashboard']);
-          } else {
-            this.router.navigate(['/']);
-          }
-        },
-        error: (err) => {
-          this.error = err.error?.message || 'Login failed';
-          this.loading = false;
-        }
-      });
+    const email = (this.form.email || '').toLowerCase();
+    const role =
+      email.includes('admin') ? 'admin' : email.includes('client') ? 'client' : 'worker';
+
+    if (role === 'admin') {
+      await this.router.navigate(['/admin']);
+    } else if (role === 'client') {
+      await this.router.navigate(['/client']);
+    } else {
+      await this.router.navigate(['/worker/dashboard']);
+    }
   }
 }
+

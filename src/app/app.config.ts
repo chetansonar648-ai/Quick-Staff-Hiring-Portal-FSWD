@@ -20,7 +20,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
-    provideHttpClient(),                 // ✅ ADD THIS
-    importProvidersFrom(FormsModule)     // ✅ ADD THIS
+    provideHttpClient(),
+    importProvidersFrom(FormsModule), // FormsModule for ngModel
   ]
 };

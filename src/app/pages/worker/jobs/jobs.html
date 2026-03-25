@@ -1,0 +1,244 @@
+<div class="flex h-screen bg-background-light dark:bg-background-dark font-display">
+  <aside class="w-64 flex-shrink-0 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 hidden md:flex flex-col">
+    <div class="flex items-center gap-3 p-6 border-b border-gray-200 dark:border-gray-700">
+      <div class="bg-primary p-2 rounded-lg"><span class="material-symbols-outlined text-white">work</span></div>
+      <h2 class="text-lg font-bold">QuickStaff</h2>
+    </div>
+
+    <nav class="flex-1 p-4 space-y-1">
+      <a
+        class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+        routerLink="/worker/dashboard"
+      >
+        <span class="material-symbols-outlined">dashboard</span>
+        <p class="text-sm leading-normal">Dashboard</p>
+      </a>
+
+      <a
+        class="flex items-center gap-3 px-3 py-2 rounded-lg"
+        routerLink="/worker/jobs"
+        [queryParams]="{ status: 'pending' }"
+        [ngClass]="isActiveStatus('pending') ? 'bg-primary/20 text-primary font-bold' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'"
+      >
+        <span
+          class="material-symbols-outlined"
+          [ngClass]="isActiveStatus('pending') ? 'text-primary material-symbols-outlined-active' : ''"
+        >
+          notifications
+        </span>
+        <p class="text-sm leading-normal">Job Requests</p>
+      </a>
+
+      <a
+        class="flex items-center gap-3 px-3 py-2 rounded-lg"
+        routerLink="/worker/jobs"
+        [queryParams]="{ status: 'accepted' }"
+        [ngClass]="isActiveStatus('accepted') ? 'bg-primary/20 text-primary font-bold' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'"
+      >
+        <span
+          class="material-symbols-outlined"
+          [ngClass]="isActiveStatus('accepted') ? 'text-primary material-symbols-outlined-active' : ''"
+        >
+          task_alt
+        </span>
+        <p class="text-sm leading-normal">Accepted Jobs</p>
+      </a>
+
+      <a
+        class="flex items-center gap-3 px-3 py-2 rounded-lg"
+        routerLink="/worker/jobs"
+        [queryParams]="{ status: 'in_progress' }"
+        [ngClass]="isActiveStatus('in_progress') ? 'bg-primary/20 text-primary font-bold' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'"
+      >
+        <span
+          class="material-symbols-outlined"
+          [ngClass]="isActiveStatus('in_progress') ? 'text-primary material-symbols-outlined-active' : ''"
+        >
+          work
+        </span>
+        <p class="text-sm leading-normal">Active Job</p>
+      </a>
+
+      <a
+        class="flex items-center gap-3 px-3 py-2 rounded-lg"
+        routerLink="/worker/jobs"
+        [queryParams]="{ status: 'completed' }"
+        [ngClass]="isActiveStatus('completed') ? 'bg-primary/20 text-primary font-bold' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'"
+      >
+        <span
+          class="material-symbols-outlined"
+          [ngClass]="isActiveStatus('completed') ? 'text-primary material-symbols-outlined-active' : ''"
+        >
+          history
+        </span>
+        <p class="text-sm leading-normal">Past Jobs</p>
+      </a>
+
+      <a
+        class="flex items-center gap-3 px-3 py-2 rounded-lg"
+        routerLink="/worker/jobs"
+        [queryParams]="{ status: 'rejected' }"
+        [ngClass]="isActiveStatus('rejected') ? 'bg-primary/20 text-primary font-bold' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'"
+      >
+        <span
+          class="material-symbols-outlined"
+          [ngClass]="isActiveStatus('rejected') ? 'text-primary material-symbols-outlined-active' : ''"
+        >
+          thumb_down
+        </span>
+        <p class="text-sm leading-normal">Rejected Jobs</p>
+      </a>
+
+      <a
+        class="flex items-center gap-3 px-3 py-2 rounded-lg"
+        routerLink="/worker/jobs"
+        [queryParams]="{ status: 'cancelled' }"
+        [ngClass]="isActiveStatus('cancelled') ? 'bg-primary/20 text-primary font-bold' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'"
+      >
+        <span
+          class="material-symbols-outlined"
+          [ngClass]="isActiveStatus('cancelled') ? 'text-primary material-symbols-outlined-active' : ''"
+        >
+          cancel
+        </span>
+        <p class="text-sm leading-normal">Cancelled Jobs</p>
+      </a>
+
+      <a
+        class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+        routerLink="/worker/saved-clients"
+      >
+        <span class="material-symbols-outlined">bookmark</span>
+        <p class="text-sm leading-normal">Saved Clients</p>
+      </a>
+
+      <a
+        class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+        routerLink="/worker/profile"
+      >
+        <span class="material-symbols-outlined">person</span>
+        <p class="text-sm leading-normal">Profile</p>
+      </a>
+    </nav>
+  </aside>
+
+  <main class="flex-1 flex flex-col items-start w-full overflow-hidden">
+    <header class="flex w-full items-center justify-between px-6 py-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <h2 class="text-xl font-bold">{{ titles[statusFilter] }}</h2>
+    </header>
+
+    <div class="flex-1 w-full overflow-y-auto p-6 md:p-8">
+      <div class="max-w-4xl mx-auto space-y-4">
+        <div *ngIf="loading">Loading...</div>
+
+        <ng-container *ngIf="!loading">
+          <div
+            *ngIf="jobs.length === 0"
+            class="flex flex-col items-center justify-center text-center p-12 bg-white dark:bg-gray-800 rounded-xl border border-dashed border-gray-300 dark:border-gray-700 mt-8"
+          >
+            <div class="p-4 bg-primary/10 rounded-full text-primary mb-4">
+              <span class="material-symbols-outlined text-4xl">work_history</span>
+            </div>
+            <h3 class="text-lg font-bold">No {{ titles[statusFilter].toLowerCase() }} found.</h3>
+          </div>
+
+          <ng-container *ngIf="jobs.length !== 0">
+            <ng-container *ngFor="let job of jobs">
+              <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div class="p-6">
+                  <div class="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 class="text-lg font-bold mb-1">Customer: {{ job.client_name }}</h3>
+                      <div class="flex items-center gap-2 text-gray-500 text-sm">
+                        <span class="material-symbols-outlined text-base">location_on</span>
+                        <span>{{ job.address || 'No address provided' }}</span>
+                      </div>
+                    </div>
+
+                    <div
+                      class="px-2 py-1 rounded-full text-xs font-bold uppercase tracking-wider"
+                      [ngClass]="getStatusPillClasses(job.status)"
+                    >
+                      {{ job.status.replace('_', ' ') }}
+                    </div>
+                  </div>
+
+                  <div class="border-t border-gray-100 dark:border-gray-700 pt-4">
+                    <h4 class="font-semibold mb-2 text-sm">Job Description</h4>
+                    <p class="text-gray-600 dark:text-gray-300 text-sm leading-relaxed mb-2">
+                      {{ job.special_instructions || 'No special instructions.' }}
+                      <br />
+                      <span class="italic text-gray-400">Service: {{ job.service_name }}</span>
+                    </p>
+                  </div>
+                </div>
+
+                <div class="bg-gray-50 dark:bg-gray-900/50 px-6 py-3 flex justify-end items-center">
+                  <div class="flex gap-2">
+                    <ng-container *ngIf="statusFilter === 'pending'">
+                      <button
+                        (click)="handleStatusUpdate(job.id, 'rejected')"
+                        class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-bold text-sm hover:bg-gray-300"
+                      >
+                        Decline
+                      </button>
+                      <button
+                        (click)="handleStatusUpdate(job.id, 'accepted')"
+                        class="px-4 py-2 bg-green-600 text-white rounded-lg font-bold text-sm hover:bg-green-700"
+                      >
+                        Accept
+                      </button>
+                    </ng-container>
+
+                    <ng-container *ngIf="statusFilter === 'accepted'">
+                      <button
+                        (click)="handleStatusUpdate(job.id, 'cancelled')"
+                        class="px-4 py-2 bg-red-100 text-red-700 rounded-lg font-bold text-sm hover:bg-red-200"
+                      >
+                        Cancel Job
+                      </button>
+                      <button
+                        (click)="handleStatusUpdate(job.id, 'in_progress')"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg font-bold text-sm hover:bg-blue-700"
+                      >
+                        Start Job
+                      </button>
+                    </ng-container>
+
+                    <ng-container *ngIf="statusFilter === 'in_progress'">
+                      <button
+                        (click)="handleStatusUpdate(job.id, 'completed')"
+                        class="px-4 py-2 bg-green-600 text-white rounded-lg font-bold text-sm hover:bg-green-700"
+                      >
+                        Complete
+                      </button>
+                    </ng-container>
+
+                    <ng-container *ngIf="statusFilter === 'completed'">
+                      <button
+                        (click)="handleSaveClient(job.id)"
+                        class="px-4 py-2 bg-primary text-white rounded-lg font-bold text-sm hover:bg-primary/90 flex items-center gap-1"
+                      >
+                        <span class="material-symbols-outlined text-sm">bookmark_add</span>
+                        Save Client
+                      </button>
+                    </ng-container>
+
+                    <ng-container *ngIf="statusFilter === 'rejected'">
+                      <span class="text-sm text-gray-500 font-medium">Archived</span>
+                    </ng-container>
+
+                    <ng-container *ngIf="statusFilter === 'cancelled'">
+                      <span class="text-sm text-gray-500 font-medium">Cancelled</span>
+                    </ng-container>
+                  </div>
+                </div>
+              </div>
+            </ng-container>
+          </ng-container>
+        </ng-container>
+      </div>
+    </div>
+  </main>
+</div>
+
