@@ -1,0 +1,190 @@
+<main *ngIf="loading" class="flex-1 overflow-y-auto p-6 md:p-8 flex items-center justify-center">
+  <div class="flex flex-col items-center gap-4">
+    <div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+    <p class="text-gray-500 font-medium">Loading profile...</p>
+  </div>
+</main>
+
+<main *ngIf="!loading && (error || !worker)" class="flex-1 overflow-y-auto p-6 md:p-8 flex items-center justify-center">
+  <div class="text-center space-y-4 max-w-md">
+    <div class="flex justify-center">
+      <span class="material-symbols-outlined text-6xl text-gray-300">person_off</span>
+    </div>
+    <h2 class="text-xl font-bold text-gray-900 dark:text-white">Profile Not Found</h2>
+    <p class="text-gray-500">{{ error || "We couldn't find the staff profile you're looking for." }}</p>
+    <button
+      (click)="router.navigate(['/client/browse-staff'])"
+      class="px-6 py-2 bg-primary text-white font-bold rounded-lg hover:bg-primary/90 transition-colors"
+    >
+      Browse Staff
+    </button>
+  </div>
+</main>
+
+<main *ngIf="!loading && !error && worker" class="flex-1 overflow-y-auto p-6 md:p-8">
+  <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div class="lg:col-span-2 space-y-8">
+      <div class="bg-white dark:bg-gray-900/50 p-6 rounded-xl border border-gray-200 dark:border-gray-800">
+        <div class="flex flex-col sm:flex-row items-start gap-6">
+          <img
+            [alt]="worker.name"
+            class="size-32 rounded-full object-cover border-4 border-white dark:border-gray-800 shadow-lg flex-shrink-0"
+            [src]="worker.image_url || defaultWorkerAvatar"
+          />
+          <div class="flex-grow space-y-3">
+            <div class="flex flex-col sm:flex-row justify-between sm:items-center">
+              <div>
+                <h2 class="text-3xl font-bold text-gray-900 dark:text-white">{{ worker.name }}</h2>
+                <p class="text-lg text-primary font-medium">{{ worker.role }}</p>
+              </div>
+              <div class="flex items-center gap-1 text-yellow-500 mt-2 sm:mt-0">
+                <span class="material-symbols-outlined !text-xl" style="font-variation-settings: 'FILL' 1">
+                  star
+                </span>
+                <span class="text-lg font-bold text-gray-700 dark:text-gray-200">{{ formatRating(worker.rating || 0) }}</span>
+                <span class="text-sm text-gray-500 dark:text-gray-400">({{ worker.rating_count || 0 }} reviews)</span>
+              </div>
+            </div>
+            <p class="text-gray-600 dark:text-gray-300">
+              {{ worker.description || 'No description available for this worker.' }}
+            </p>
+            <div class="flex flex-wrap gap-3">
+              <button
+                type="button"
+                (click)="router.navigate(['/client/book/step-1'], { queryParams: { workerId: worker.id } })"
+                class="flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white font-bold rounded-lg hover:bg-primary/90 transition-colors"
+              >
+                <span class="material-symbols-outlined">calendar_add_on</span>
+                <span>Book Now</span>
+              </button>
+
+              <button
+                type="button"
+                (click)="handleAddToSaved()"
+                [disabled]="saving"
+                class="flex items-center justify-center gap-2 px-6 py-3 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-bold rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+              >
+                <span class="material-symbols-outlined">bookmark_add</span>
+                <span>{{ saving ? 'Saving...' : 'Add to Saved' }}</span>
+              </button>
+            </div>
+
+            <div *ngIf="saveError" class="bg-red-100 text-red-700 p-3 rounded-lg mt-4 mb-2 text-sm">
+              {{ saveError }}
+            </div>
+            <div *ngIf="saveSuccess" class="bg-green-100 text-green-700 p-3 rounded-lg mt-4 mb-2 text-sm">
+              Worker saved successfully!
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-gray-900/50 p-6 rounded-xl border border-gray-200 dark:border-gray-800">
+        <h3 class="text-xl font-bold mb-4 text-gray-900 dark:text-white">About Me</h3>
+        {{ worker.about || worker.description || 'No detailed information available.' }}
+      </div>
+
+      <div class="bg-white dark:bg-gray-900/50 p-6 rounded-xl border border-gray-200 dark:border-gray-800">
+        <h3 class="text-xl font-bold mb-4 text-gray-900 dark:text-white">Experience & Skills</h3>
+        <div class="flex flex-wrap gap-3">
+          <ng-container *ngIf="worker.skills && worker.skills.length > 0; else noSkills">
+            <span *ngFor="let skill of worker.skills; let index = index" class="bg-primary/10 text-primary text-sm font-medium px-3 py-1.5 rounded-full">
+              {{ skill.skill_name || skill }}
+            </span>
+          </ng-container>
+          <ng-template #noSkills>
+            <span class="text-gray-500">No specific skills listed.</span>
+          </ng-template>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-gray-900/50 p-6 rounded-xl border border-gray-200 dark:border-gray-800">
+        <h3 class="text-xl font-bold mb-4 text-gray-900 dark:text-white">Client Reviews ({{ worker.reviews?.length || 0 }})</h3>
+        <div class="space-y-6">
+          <ng-container *ngIf="worker.reviews && worker.reviews.length > 0; else noReviews">
+            <div *ngFor="let r of worker.reviews; let index = index">
+              <div class="flex items-start gap-4">
+                <img [alt]="r.client_name || 'Client'" class="size-10 rounded-full object-cover" [src]="r.client_image || defaultClientAvatar" />
+                <div class="flex-1">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <p class="font-semibold text-gray-800 dark:text-gray-100">{{ r.client_name || 'Anonymous' }}</p>
+                      <p class="text-sm text-gray-500 dark:text-gray-400">{{ formatDate(r.created_at) }}</p>
+                    </div>
+                    <div class="flex items-center gap-1 text-yellow-500">
+                      <span
+                        *ngFor="let i of stars"
+                        [ngClass]="['material-symbols-outlined !text-base', i < r.rating ? '' : 'text-gray-300'].join(' ')"
+                        style="font-variation-settings: 'FILL' 1"
+                      >
+                        star
+                      </span>
+                    </div>
+                  </div>
+                  <p class="mt-2 text-gray-600 dark:text-gray-300">{{ r.comment }}</p>
+                </div>
+              </div>
+              <div *ngIf="index < worker.reviews.length - 1" class="border-t border-gray-200 dark:border-gray-700 mt-6"></div>
+            </div>
+          </ng-container>
+          <ng-template #noReviews>
+            <p class="text-gray-500">No reviews yet.</p>
+          </ng-template>
+        </div>
+        <div *ngIf="worker.reviews && worker.reviews.length > 0" class="mt-6 text-center">
+          <button class="font-semibold text-primary hover:underline">Show More Reviews</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="space-y-8">
+      <div class="bg-white dark:bg-gray-900/50 p-6 rounded-xl border border-gray-200 dark:border-gray-800">
+        <h3 class="text-xl font-bold mb-4 text-gray-900 dark:text-white">Availability Calendar</h3>
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <button (click)="prevMonth()" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
+              <span class="material-symbols-outlined">chevron_left</span>
+            </button>
+            <p class="font-semibold">{{ monthLabel() }}</p>
+            <button (click)="nextMonth()" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
+              <span class="material-symbols-outlined">chevron_right</span>
+            </button>
+          </div>
+          <div class="grid grid-cols-7 text-center text-sm text-gray-500 dark:text-gray-400">
+            <div class="font-medium">Su</div>
+            <div class="font-medium">Mo</div>
+            <div class="font-medium">Tu</div>
+            <div class="font-medium">We</div>
+            <div class="font-medium">Th</div>
+            <div class="font-medium">Fr</div>
+            <div class="font-medium">Sa</div>
+          </div>
+          <div class="grid grid-cols-7 gap-1 text-center text-sm">
+            <ng-container *ngFor="let date of days; let i = index">
+              <div *ngIf="!date"></div>
+              <div
+                *ngIf="date"
+                [ngClass]="dayClass(date)"
+                [title]="dayTitle(date)"
+              >
+                {{ date.getDate() }}
+                <div *ngIf="isDateBooked(date)" class="absolute bottom-0 size-1 bg-red-500 rounded-full"></div>
+              </div>
+            </ng-container>
+          </div>
+          <div class="flex items-center gap-4 mt-4">
+            <div class="flex items-center gap-2">
+              <div class="size-3 rounded-full bg-primary/20"></div>
+              <span class="text-sm text-gray-600 dark:text-gray-300">Available</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="size-3 rounded-full bg-red-100 border border-red-200"></div>
+              <span class="text-sm text-gray-600 dark:text-gray-300">Booked</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+

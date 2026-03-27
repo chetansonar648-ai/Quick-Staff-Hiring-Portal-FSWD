@@ -1,0 +1,61 @@
+<div class="flex flex-col min-h-screen bg-background-light text-text-light font-display">
+
+  <!-- Hero Section -->
+  <section class="relative bg-background-dark py-20 px-4 sm:px-6 lg:px-8 text-white overflow-hidden">
+    <div class="absolute inset-0 z-0">
+      <div class="absolute inset-0 bg-gradient-to-r from-[#005a9c] to-[#003d6b] opacity-90"></div>
+    </div>
+    <div class="relative z-10 max-w-4xl mx-auto text-center">
+      <h1 class="text-4xl md:text-6xl font-black tracking-tight mb-6 mt-16">
+        Frequently Asked Questions
+      </h1>
+      <p class="text-lg md:text-xl text-blue-100 max-w-2xl mx-auto leading-relaxed">
+        Find answers to common questions about using Quick Staff Hiring Portal.
+      </p>
+    </div>
+  </section>
+
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-16">
+
+    <!-- Tab Navigation -->
+    <div class="flex flex-wrap justify-center gap-2 mb-12">
+      <button
+        *ngFor="let tab of tabs"
+        (click)="setTab(tab.id)"
+        [ngClass]="'px-6 py-3 rounded-lg font-semibold transition-colors ' + (activeTab === tab.id ? 'bg-primary text-white' : 'bg-white text-text-light border border-gray-200 hover:bg-gray-50')"
+      >
+        {{ tab.label }}
+      </button>
+    </div>
+
+    <!-- FAQ List -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 md:p-8">
+      <div *ngFor="let faq of activeFaqs; let index = index" class="border-b border-gray-200 last:border-0">
+        <button
+          (click)="toggleFaq(index)"
+          class="w-full py-5 flex items-center justify-between text-left hover:text-primary transition-colors"
+        >
+          <span class="font-semibold text-lg pr-4">{{ faq.q }}</span>
+          <span class="material-symbols-outlined transition-transform" [ngClass]="openIndex === index ? 'rotate-180' : ''">
+            expand_more
+          </span>
+        </button>
+        <div *ngIf="openIndex === index" class="pb-5 text-subtle-light leading-relaxed">
+          {{ faq.a }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Still Need Help -->
+    <div class="mt-12 text-center">
+      <p class="text-subtle-light text-lg mb-4">Still have questions?</p>
+      <a
+        routerLink="/contact"
+        class="inline-flex items-center justify-center px-6 py-3 bg-primary text-white font-bold rounded-lg hover:bg-primary/90 transition-colors"
+      >
+        Contact Support
+      </a>
+    </div>
+  </div>
+</div>
+

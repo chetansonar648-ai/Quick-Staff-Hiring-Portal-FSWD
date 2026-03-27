@@ -1,0 +1,15 @@
+export function getAuthToken(): string | null {
+  // React stores token under `token` and also maintains `qs_token` in some flows.
+  // We accept both to match behavior.
+  return (
+    localStorage.getItem('token') ||
+    localStorage.getItem('qs_token') ||
+    null
+  );
+}
+
+export function setAuthToken(token: string): void {
+  localStorage.setItem('token', token);
+  localStorage.setItem('qs_token', token);
+}
+

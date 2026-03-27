@@ -1,0 +1,323 @@
+<div *ngIf="loading">
+  <div class="p-8">Loading profile...</div>
+</div>
+
+<div *ngIf="!loading" class="space-y-6">
+  <!-- Header -->
+  <header class="flex justify-between items-center mb-8">
+    <div>
+      <h2 class="text-3xl font-bold text-slate-800 dark:text-white">Profile</h2>
+      <p class="text-slate-500 dark:text-slate-400">Manage your personal info, designation, skills, and availability.</p>
+    </div>
+    <div class="flex items-center gap-6"></div>
+  </header>
+
+  <!-- Alerts -->
+  <div *ngIf="error" class="bg-red-100 text-red-700 p-4 rounded-lg">{{ error }}</div>
+  <div *ngIf="success" class="bg-green-100 text-green-700 p-4 rounded-lg">Changes saved successfully!</div>
+
+  <!-- Profile Picture & Personal Info -->
+  <div class="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-sm">
+    <h3 class="text-lg font-semibold text-slate-800 dark:text-white mb-4">Personal Information</h3>
+    <div class="flex flex-col md:flex-row gap-6">
+      <!-- Profile Picture -->
+      <div class="flex flex-col items-center gap-3">
+        <div class="relative">
+          <ng-container *ngIf="getProfilePictureUrl(); else noPic">
+            <img
+              [src]="getProfilePictureUrl()!"
+              [alt]="profile.name"
+              class="w-24 h-24 rounded-full object-cover border-2 border-slate-200 dark:border-slate-700"
+            />
+          </ng-container>
+          <ng-template #noPic>
+            <div class="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center text-primary text-2xl font-bold border-2 border-slate-200 dark:border-slate-700">
+              {{ getInitials(profile.name) }}
+            </div>
+          </ng-template>
+
+          <div *ngIf="uploading" class="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
+            <span class="text-white text-sm">Uploading...</span>
+          </div>
+        </div>
+
+        <input
+          type="file"
+          #fileInput
+          (change)="handleProfilePictureUpload($event)"
+          accept="image/jpeg,image/png,image/gif,image/webp"
+          class="hidden"
+        />
+        <button
+          (click)="triggerFileSelect()"
+          [disabled]="uploading"
+          class="text-sm text-primary hover:text-primary/80 font-medium disabled:opacity-50"
+        >
+          {{ uploading ? 'Uploading...' : 'Change Photo' }}
+        </button>
+      </div>
+
+      <!-- Personal Info Fields -->
+      <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1" for="name">Full Name</label>
+          <input
+            class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-primary focus:border-primary p-2"
+            id="name"
+            type="text"
+            [(ngModel)]="profile.name"
+            placeholder="Your full name"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1" for="email">Email (read-only)</label>
+          <input
+            class="w-full bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-lg p-2 text-slate-500 cursor-not-allowed"
+            id="email"
+            type="email"
+            [value]="profile.email"
+            disabled
+            readonly
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1" for="phone">Phone</label>
+          <input
+            class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-primary focus:border-primary p-2"
+            id="phone"
+            type="tel"
+            [(ngModel)]="profile.phone"
+            placeholder="Your phone number"
+          />
+        </div>
+        <div class="flex items-end">
+          <button
+            (click)="showPasswordModal = true"
+            class="text-sm text-primary hover:text-primary/80 font-medium flex items-center gap-1"
+          >
+            <span class="material-icons text-base">lock</span>
+            Change Password
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Job Designation -->
+  <div class="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-sm">
+    <h3 class="text-lg font-semibold text-slate-800 dark:text-white mb-4">Job Designation</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1" for="title">Title</label>
+        <select
+          class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-primary focus:border-primary p-2"
+          id="title"
+          [(ngModel)]="profile.title"
+        >
+          <option value="">Select a title...</option>
+          <option *ngFor="let name of serviceNames; let idx = index" [value]="name">{{ name }}</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1" for="experience">Years of Experience</label>
+        <input
+          class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-primary focus:border-primary p-2"
+          id="experience"
+          type="number"
+          min="0"
+          [(ngModel)]="profile.years_of_experience"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- Biography -->
+  <div class="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-sm">
+    <h3 class="text-lg font-semibold text-slate-800 dark:text-white mb-4">Biography</h3>
+    <div>
+      <label class="sr-only" for="biography">Biography</label>
+      <textarea
+        class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-primary focus:border-primary p-2"
+        id="biography"
+        placeholder="Tell us about yourself..."
+        rows="4"
+        [(ngModel)]="profile.bio"
+      ></textarea>
+    </div>
+  </div>
+
+  <!-- Location Details -->
+  <div class="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-sm">
+    <h3 class="text-lg font-semibold text-slate-800 dark:text-white mb-4">Location Details</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1" for="address">Address</label>
+        <input
+          class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-primary focus:border-primary p-2"
+          id="address"
+          placeholder="e.g., 123 Main St, Anytown, USA"
+          type="text"
+          [(ngModel)]="profile.address"
+        />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1" for="service-location">Location of Service</label>
+        <input
+          class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-primary focus:border-primary p-2"
+          id="service-location"
+          placeholder="e.g., San Francisco Bay Area"
+          type="text"
+          [(ngModel)]="profile.service_location"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- Skills -->
+  <div class="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-sm">
+    <h3 class="text-lg font-semibold text-slate-800 dark:text-white mb-4">Skills</h3>
+    <div class="flex flex-wrap gap-2 mb-4">
+      <span *ngFor="let skill of profile.skills; let idx = index" class="bg-primary/10 text-primary text-sm font-medium px-3 py-1 rounded-full flex items-center gap-2">
+        {{ skill }}
+        <button (click)="removeSkill(skill)" class="text-primary/70 hover:text-primary">×</button>
+      </span>
+    </div>
+    <div class="relative">
+      <span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">add</span>
+      <input
+        class="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-primary focus:border-primary"
+        placeholder="Add a new skill and press Enter"
+        type="text"
+        [(ngModel)]="skillInput"
+        (keydown.enter)="$event.preventDefault(); addSkill()"
+      />
+    </div>
+  </div>
+
+  <!-- Stats Row -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <!-- Hourly Rate -->
+    <div class="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-sm">
+      <h3 class="text-lg font-semibold text-slate-800 dark:text-white mb-4">Hourly Rate</h3>
+      <div class="relative">
+        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500 dark:text-slate-400">$</span>
+        <input
+          class="w-full pl-7 pr-12 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-primary focus:border-primary p-2"
+          type="text"
+          [(ngModel)]="profile.hourly_rate"
+        />
+        <span class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 dark:text-slate-400">/hr</span>
+      </div>
+    </div>
+    <!-- Rating -->
+    <div class="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-sm flex flex-col justify-center">
+      <p class="text-sm text-slate-500 dark:text-slate-400 mb-1">Rating</p>
+      <div class="flex items-center gap-2">
+        <span class="text-2xl font-bold text-slate-800 dark:text-white">{{ profile.rating }}</span>
+        <span class="material-icons text-yellow-400">star</span>
+      </div>
+    </div>
+    <!-- Total Reviews -->
+    <div class="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-sm flex flex-col justify-center">
+      <p class="text-sm text-slate-500 dark:text-slate-400 mb-1">Total Reviews</p>
+      <p class="text-2xl font-bold text-slate-800 dark:text-white">{{ profile.total_reviews }}</p>
+    </div>
+    <!-- Completed Jobs -->
+    <div class="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-sm flex flex-col justify-center">
+      <p class="text-sm text-slate-500 dark:text-slate-400 mb-1">Completed Jobs</p>
+      <p class="text-2xl font-bold text-slate-800 dark:text-white">{{ profile.completed_jobs }}</p>
+    </div>
+  </div>
+
+  <!-- Availability -->
+  <div class="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-sm">
+    <h3 class="text-lg font-semibold text-slate-800 dark:text-white mb-4">Availability</h3>
+    <div class="space-y-4">
+      <div *ngFor="let day of days" class="grid grid-cols-[100px_1fr_auto_1fr] items-center gap-4">
+        <p class="font-medium">{{ day }}</p>
+        <input
+          class="w-full text-center bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-primary focus:border-primary p-2"
+          type="text"
+          placeholder="09:00 AM"
+          [ngModel]="profile.availability?.[day]?.start || ''"
+          (ngModelChange)="updateAvailability(day, 'start', $event)"
+        />
+        <span class="text-slate-400">-</span>
+        <input
+          class="w-full text-center bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-primary focus:border-primary p-2"
+          type="text"
+          placeholder="05:00 PM"
+          [ngModel]="profile.availability?.[day]?.end || ''"
+          (ngModelChange)="updateAvailability(day, 'end', $event)"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- Save Button -->
+  <div class="flex justify-end pt-2">
+    <button
+      (click)="saveChanges()"
+      [disabled]="saving"
+      class="bg-primary text-white font-medium py-3 px-6 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+    >
+      {{ saving ? 'Saving Changes...' : 'Save Changes' }}
+    </button>
+  </div>
+</div>
+
+<!-- Password Change Modal -->
+<div *ngIf="showPasswordModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+  <div class="bg-white dark:bg-slate-900 rounded-lg p-6 w-full max-w-md mx-4">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-lg font-semibold text-slate-800 dark:text-white">Change Password</h3>
+      <button (click)="showPasswordModal = false" class="text-slate-400 hover:text-slate-600">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <div *ngIf="passwordError" class="bg-red-100 text-red-700 p-3 rounded-lg mb-4 text-sm">{{ passwordError }}</div>
+    <div *ngIf="passwordSuccess" class="bg-green-100 text-green-700 p-3 rounded-lg mb-4 text-sm">Password changed successfully!</div>
+
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Current Password</label>
+        <input
+          type="password"
+          class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2"
+          [(ngModel)]="passwordForm.current_password"
+        />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">New Password</label>
+        <input
+          type="password"
+          class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2"
+          [(ngModel)]="passwordForm.new_password"
+        />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Confirm New Password</label>
+        <input
+          type="password"
+          class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2"
+          [(ngModel)]="passwordForm.confirm_password"
+        />
+      </div>
+    </div>
+
+    <div class="flex justify-end gap-3 mt-6">
+      <button (click)="showPasswordModal = false" class="px-4 py-2 text-slate-600 hover:text-slate-800">
+        Cancel
+      </button>
+      <button
+        (click)="handlePasswordChange()"
+        [disabled]="changingPassword"
+        class="bg-primary text-white font-medium py-2 px-4 rounded-lg hover:bg-primary/90 disabled:opacity-50"
+      >
+        {{ changingPassword ? 'Changing...' : 'Change Password' }}
+      </button>
+    </div>
+  </div>
+</div>
+

@@ -1,0 +1,54 @@
+<div class="dashboard-page">
+  <div class="page-header">
+    <h2>Dashboard Overview</h2>
+    <p>Welcome back! Here's what's happening today.</p>
+  </div>
+
+  <div class="stats-grid">
+    <div *ngFor="let stat of stats; let index = index" class="stat-card">
+      <div class="stat-icon" [style.background]="stat.color + '20'" [style.color]="stat.color">
+        {{ stat.icon }}
+      </div>
+      <div class="stat-content">
+        <p class="stat-label">{{ stat.label }}</p>
+        <h3 class="stat-value">{{ stat.value }}</h3>
+        <span class="stat-change positive">{{ stat.change }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="dashboard-grid">
+    <div class="dashboard-card">
+      <h3>Recent Activity</h3>
+      <div class="activity-list">
+        <ng-container *ngIf="recentActivities.length > 0; else noActivity">
+          <div *ngFor="let activity of recentActivities; let index = index" class="activity-item">
+            <div class="activity-avatar">
+              {{ activity.user && activity.user.charAt(0) ? activity.user.charAt(0) : '?' }}
+            </div>
+            <div class="activity-content">
+              <p class="activity-text">
+                <strong>{{ activity.user || 'Unknown' }}</strong> {{ activity.action || '' }}
+              </p>
+              <span class="activity-time">{{ activity.time || '' }}</span>
+            </div>
+          </div>
+        </ng-container>
+        <ng-template #noActivity>
+          <p>No recent activity</p>
+        </ng-template>
+      </div>
+    </div>
+
+    <div class="dashboard-card">
+      <h3>Quick Actions</h3>
+      <div class="quick-actions">
+        <button class="action-btn" (click)="handleAddUser()">+ Add User</button>
+        <button class="action-btn" (click)="handleViewReports()">📊 View Reports</button>
+        <button class="action-btn" (click)="handleManageSettings()">⚙️ Manage Settings</button>
+        <button class="action-btn" (click)="handleSendNotification()">📧 Send Notification</button>
+      </div>
+    </div>
+  </div>
+</div>
+

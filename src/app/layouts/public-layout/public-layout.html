@@ -1,0 +1,86 @@
+<div class="bg-background-light text-text-light min-h-screen flex flex-col">
+  <header class="sticky top-0 z-40 bg-background-light/80 backdrop-blur border-b border-border-light">
+    <div class="flex items-center justify-between px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto py-3">
+      <a routerLink="/" class="flex items-center gap-3">
+        <div class="size-6 text-primary">
+          <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+            <path
+              clip-rule="evenodd"
+              d="M24 4H42V17.3333V30.6667H24V44H6V30.6667V17.3333H24V4Z"
+              fill="currentColor"
+              fill-rule="evenodd"
+            ></path>
+          </svg>
+        </div>
+        <h2 class="text-lg font-bold tracking-tight">Quick Staff Hiring Portal</h2>
+      </a>
+      <div class="hidden md:flex items-center gap-8">
+        <a class="text-sm font-medium hover:text-primary" routerLink="/" fragment="categories">
+          Staff Categories
+        </a>
+        <a class="text-sm font-medium hover:text-primary" routerLink="/" fragment="how">
+          How It Works
+        </a>
+        <a class="text-sm font-medium hover:text-primary" routerLink="/" fragment="about">
+          About Us
+        </a>
+        <div class="flex gap-2">
+          <a
+            routerLink="/register"
+            class="flex min-w-[84px] items-center justify-center rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold hover:bg-primary/90"
+          >
+            Sign Up
+          </a>
+          <a
+            routerLink="/login"
+            class="flex min-w-[84px] items-center justify-center rounded-lg h-10 px-4 bg-gray-200 text-text-light text-sm font-bold hover:bg-gray-300"
+          >
+            Login
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1">
+    <router-outlet></router-outlet>
+  </main>
+
+  <footer class="bg-gray-100 border-t border-gray-200">
+    <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+        <div class="space-y-3">
+          <h3 class="text-sm font-semibold uppercase">Company</h3>
+          <ul class="space-y-2 text-sm text-subtle-light">
+            <li>About Us</li>
+            <li>Contact</li>
+            <li>Careers</li>
+          </ul>
+        </div>
+        <div class="space-y-3">
+          <h3 class="text-sm font-semibold uppercase">Support</h3>
+          <ul class="space-y-2 text-sm text-subtle-light">
+            <li>FAQ</li>
+            <li>Help Center</li>
+            <li>Trust & Safety</li>
+          </ul>
+        </div>
+        <div class="space-y-3">
+          <h3 class="text-sm font-semibold uppercase">Legal</h3>
+          <ul class="space-y-2 text-sm text-subtle-light">
+            <li>Privacy Policy</li>
+            <li>Terms of Service</li>
+          </ul>
+        </div>
+        <div class="space-y-3">
+          <h3 class="text-sm font-semibold uppercase">Connect</h3>
+          <div class="flex gap-4 text-subtle-light">FB · TW</div>
+        </div>
+      </div>
+      <div class="mt-8 border-t border-gray-200 pt-8 text-center text-sm text-subtle-light">
+        © 2026 Quick Staff Hiring Portal. All rights reserved.
+      </div>
+    </div>
+  </footer>
+</div>
+

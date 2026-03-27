@@ -1,0 +1,49 @@
+<div class="flex flex-col min-h-screen bg-background-light text-text-light font-display">
+  <main class="flex-1 py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+
+    <div class="text-center mb-16">
+      <h1 class="text-4xl md:text-5xl font-black mb-6 tracking-tight text-primary">Find the Right Help, Right Now</h1>
+      <p class="text-xl text-subtle-light max-w-2xl mx-auto leading-relaxed">
+        Explore our categories to find the perfect gig worker for your needs. From quick fixes to big projects, we've got you covered.
+      </p>
+    </div>
+
+    <div class="max-w-xl mx-auto mb-16 relative">
+      <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+        <span class="material-symbols-outlined text-gray-400">search</span>
+      </div>
+      <input
+        type="text"
+        placeholder="Search for a service, e.g., 'plumber'"
+        [(ngModel)]="searchTerm"
+        class="w-full pl-12 pr-4 py-4 rounded-xl border-2 border-gray-200 focus:border-primary focus:ring-4 focus:ring-blue-500/10 shadow-lg text-lg transition-all"
+      />
+    </div>
+
+    <ng-container *ngIf="filteredCategories.length > 0; else noCats">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div *ngFor="let cat of filteredCategories" class="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden hover:-translate-y-1 cursor-pointer">
+          <div class="aspect-video relative overflow-hidden">
+            <div class="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors z-10"></div>
+            <img
+              [src]="cat.image"
+              [attr.alt]="cat.title"
+              class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+            />
+          </div>
+          <div class="p-6">
+            <h3 class="text-xl font-bold mb-2 group-hover:text-primary transition-colors">{{ cat.title }}</h3>
+            <p class="text-subtle-light text-sm leading-relaxed">{{ cat.desc }}</p>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+    <ng-template #noCats>
+      <div class="text-center py-12">
+        <span class="material-symbols-outlined text-6xl text-gray-300 mb-4">search_off</span>
+        <p class="text-lg text-subtle-light">No categories found matching "{{ searchTerm }}"</p>
+      </div>
+    </ng-template>
+  </main>
+</div>
+
