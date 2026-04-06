@@ -1,8 +1,0 @@
-{
-  "name": "quick-staff-root",
-  "private": true,
-  "version": "1.0.0",
-  "dependencies": {
-    "dotenv": "^17.3.1"
-  }
-}
