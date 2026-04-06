@@ -3,6 +3,7 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { Subscription, filter } from 'rxjs';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-worker-layout',
@@ -15,18 +16,29 @@ export class WorkerLayoutComponent implements OnInit, OnDestroy {
   currentPath: string = '';
   currentUrl: string = '';
 
-  // Mock user for sidebar footer (backend disabled)
+  // Sidebar footer user (from login session)
   user: { name: string; profile_image: string } = {
-    name: 'Alex Johnson',
+    name: 'Worker',
     profile_image: '',
   };
 
   // Jobs sidebar status filter (mirrors React Jobs.jsx query param behavior)
   statusFilter: string = 'pending';
 
-  constructor(private readonly router: Router) {}
+  constructor(
+    private readonly router: Router,
+    private readonly authService: AuthService,
+  ) {}
 
   ngOnInit(): void {
+    const currentUser = this.authService.getCurrentUser();
+    if (currentUser) {
+      this.user = {
+        name: currentUser.name || 'Worker',
+        profile_image: currentUser.profile_image || '',
+      };
+    }
+
     this.updateFromUrl(this.router.url);
     this.sub = this.router.events
       .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))

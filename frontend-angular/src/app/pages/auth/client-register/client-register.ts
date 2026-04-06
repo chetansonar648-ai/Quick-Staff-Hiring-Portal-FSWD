@@ -3,6 +3,8 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 
+import { AuthService } from '../../../services/auth.service';
+
 interface ClientRegisterForm {
   name: string;
   email: string;
@@ -11,11 +13,6 @@ interface ClientRegisterForm {
 }
 
 type FieldErrors = Partial<Record<keyof ClientRegisterForm, string>>;
-
-interface RegisterResponse {
-  token?: string;
-  user?: { role?: string };
-}
 
 @Component({
   selector: 'app-auth-client-register',
@@ -27,8 +24,12 @@ export class ClientRegisterComponent {
   form: ClientRegisterForm = { name: '', email: '', password: '', confirm: '' };
   errors: FieldErrors = {};
   serverError = '';
+  loading = false;
 
-  constructor(private readonly router: Router) {}
+  constructor(
+    private readonly router: Router,
+    private readonly authService: AuthService,
+  ) {}
 
   private validate(): boolean {
     const e: FieldErrors = {};
@@ -52,13 +53,19 @@ export class ClientRegisterComponent {
 
     if (!this.validate()) return;
 
-    // No backend: simulate successful register.
-    const simulatedToken = 'mock-token';
-    localStorage.setItem('token', simulatedToken);
-    localStorage.setItem('qs_token', simulatedToken);
-    localStorage.setItem('qs_user', JSON.stringify({ role: 'client' }));
-
-    await this.router.navigate(['/']);
+    this.loading = true;
+    try {
+      await this.authService.register({
+        name: this.form.name.trim(),
+        email: this.form.email.trim(),
+        password: this.form.password,
+        role: 'client',
+      });
+      await this.router.navigate(['/client']);
+    } catch (err) {
+      this.serverError = AuthService.errorMessage(err);
+    } finally {
+      this.loading = false;
+    }
   }
 }
-

@@ -71,13 +71,28 @@ export class WorkerService {
 
   constructor(private readonly http: HttpClient) {}
 
+  private unwrapApiData<T>(res: unknown): T {
+    const maybe = res as { success?: boolean; data?: T } | T;
+    if (maybe && typeof maybe === 'object' && 'success' in (maybe as Record<string, unknown>)) {
+      const wrapped = maybe as { success?: boolean; data?: T };
+      return (wrapped.data as T) ?? ({} as T);
+    }
+    return maybe as T;
+  }
+
   async getStats(): Promise<WorkerStats> {
-    return lastValueFrom(this.http.get<WorkerStats>(`${this.baseUrl}/stats`));
+    const url = `${this.baseUrl}/stats`;
+    console.log('Calling API:', url);
+    const res = await lastValueFrom(this.http.get<unknown>(url));
+    return this.unwrapApiData<WorkerStats>(res);
   }
 
   async getJobs(status: string): Promise<WorkerJob[]> {
+    const url = `${this.baseUrl}/jobs`;
+    console.log('Calling API:', url, { status });
     const params = new HttpParams().set('status', status);
-    return lastValueFrom(this.http.get<WorkerJob[]>(`${this.baseUrl}/jobs`, { params }));
+    const res = await lastValueFrom(this.http.get<unknown>(url, { params }));
+    return this.unwrapApiData<WorkerJob[]>(res) || [];
   }
 
   async updateJobStatus(id: number, status: WorkerJobStatus): Promise<WorkerJob> {
@@ -100,7 +115,10 @@ export class WorkerService {
   }
 
   async getMyProfile(): Promise<WorkerProfileApi> {
-    return lastValueFrom(this.http.get<WorkerProfileApi>(`${this.baseUrl}/me/profile`));
+    const url = `${this.baseUrl}/me/profile`;
+    console.log('Calling API:', url);
+    const res = await lastValueFrom(this.http.get<unknown>(url));
+    return this.unwrapApiData<WorkerProfileApi>(res);
   }
 
   async getWorkerProfile(workerId: number): Promise<WorkerProfileApi> {

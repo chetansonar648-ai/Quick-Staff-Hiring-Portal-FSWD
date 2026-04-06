@@ -36,7 +36,7 @@
         <span class="error" *ngIf="errors.role">{{ errors.role }}</span>
       </div>
       <div class="error" *ngIf="serverError">{{ serverError }}</div>
-      <button class="btn" type="submit">Create account</button>
+      <button class="btn" type="submit" [disabled]="loading">{{ loading ? 'Please wait…' : 'Create account' }}</button>
     </form>
     <a routerLink="/login">Already have an account? Sign in</a>
   </div>

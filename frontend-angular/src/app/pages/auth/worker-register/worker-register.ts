@@ -3,6 +3,8 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 
+import { AuthService } from '../../../services/auth.service';
+
 interface WorkerRegisterForm {
   name: string;
   skills: string;
@@ -14,11 +16,6 @@ interface WorkerRegisterForm {
 }
 
 type FieldErrors = Partial<Record<keyof WorkerRegisterForm, string>>;
-
-interface RegisterResponse {
-  token?: string;
-  user?: { role?: string };
-}
 
 @Component({
   selector: 'app-auth-worker-register',
@@ -38,8 +35,12 @@ export class WorkerRegisterComponent {
   };
   errors: FieldErrors = {};
   serverError = '';
+  loading = false;
 
-  constructor(private readonly router: Router) {}
+  constructor(
+    private readonly router: Router,
+    private readonly authService: AuthService,
+  ) {}
 
   private validate(): boolean {
     const e: FieldErrors = {};
@@ -60,19 +61,38 @@ export class WorkerRegisterComponent {
     return Object.keys(e).length === 0;
   }
 
+  private buildSkills(): string[] | undefined {
+    const fromText = this.form.skills
+      .split(/[,;]/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const primary = this.form.primarySkill?.trim();
+    const merged = [...(primary ? [primary] : []), ...fromText];
+    const unique = [...new Set(merged)];
+    return unique.length ? unique : undefined;
+  }
+
   async onSubmit(): Promise<void> {
     this.serverError = '';
     this.errors = {};
 
     if (!this.validate()) return;
 
-    // No backend: simulate successful register.
-    const simulatedToken = 'mock-token';
-    localStorage.setItem('token', simulatedToken);
-    localStorage.setItem('qs_token', simulatedToken);
-    localStorage.setItem('qs_user', JSON.stringify({ role: 'worker' }));
-
-    await this.router.navigate(['/worker/dashboard']);
+    this.loading = true;
+    try {
+      await this.authService.register({
+        name: this.form.name.trim(),
+        email: this.form.email.trim(),
+        password: this.form.password,
+        role: 'worker',
+        bio: this.form.summary?.trim() || undefined,
+        skills: this.buildSkills(),
+      });
+      await this.router.navigate(['/worker/dashboard']);
+    } catch (err) {
+      this.serverError = AuthService.errorMessage(err);
+    } finally {
+      this.loading = false;
+    }
   }
 }
-

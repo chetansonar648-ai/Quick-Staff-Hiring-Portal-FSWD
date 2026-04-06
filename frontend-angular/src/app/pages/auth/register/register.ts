@@ -3,6 +3,8 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 
+import { AuthService } from '../../../services/auth.service';
+
 interface RegisterForm {
   name: string;
   email: string;
@@ -11,11 +13,6 @@ interface RegisterForm {
 }
 
 type FieldErrors = Partial<Record<keyof RegisterForm, string>>;
-
-interface RegisterResponse {
-  token?: string;
-  user?: { role?: string };
-}
 
 @Component({
   selector: 'app-auth-register',
@@ -27,8 +24,12 @@ export class RegisterComponent {
   form: RegisterForm = { name: '', email: '', password: '', role: '' };
   errors: FieldErrors = {};
   serverError = '';
+  loading = false;
 
-  constructor(private readonly router: Router) {}
+  constructor(
+    private readonly router: Router,
+    private readonly authService: AuthService,
+  ) {}
 
   private validate(): boolean {
     const e: FieldErrors = {};
@@ -50,17 +51,24 @@ export class RegisterComponent {
 
     if (!this.validate()) return;
 
-    // No backend: simulate successful register.
-    const simulatedToken = 'mock-token';
-    localStorage.setItem('token', simulatedToken);
-    localStorage.setItem('qs_token', simulatedToken);
-    localStorage.setItem('qs_user', JSON.stringify({ role: this.form.role }));
+    this.loading = true;
+    try {
+      await this.authService.register({
+        name: this.form.name.trim(),
+        email: this.form.email.trim(),
+        password: this.form.password,
+        role: this.form.role as 'client' | 'worker',
+      });
 
-    if (this.form.role === 'worker') {
-      await this.router.navigate(['/worker/dashboard']);
-    } else {
-      await this.router.navigate(['/']);
+      if (this.form.role === 'worker') {
+        await this.router.navigate(['/worker/dashboard']);
+      } else {
+        await this.router.navigate(['/client']);
+      }
+    } catch (err) {
+      this.serverError = AuthService.errorMessage(err);
+    } finally {
+      this.loading = false;
     }
   }
 }
-

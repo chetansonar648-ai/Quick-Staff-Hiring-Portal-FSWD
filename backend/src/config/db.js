@@ -92,8 +92,20 @@ const pool = new Pool(
 // ✅ Safe query helper
 export const query = (text, params) => pool.query(text, params);
 
+export const checkDbConnection = () => {
+  pool.query('SELECT NOW()', (err, res) => {
+    if (err) console.error('DB ERROR:', err);
+    else console.log('DB Connected:', res.rows);
+  });
+};
+
 // ✅ Ensure auxiliary tables exist
 export const ensureAuxTables = async () => {
+  await pool.query(`
+    ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS last_login TIMESTAMP;
+  `);
+
   await pool.query(`
     CREATE TABLE IF NOT EXISTS email_otps (
       id SERIAL PRIMARY KEY,

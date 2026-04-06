@@ -45,7 +45,7 @@
           <a href="#" style="color: #005a9c; font-weight: 700;">Privacy Policy</a>.
         </label>
         <div class="error" *ngIf="serverError">{{ serverError }}</div>
-        <button class="btn" type="submit">Create Client Account</button>
+        <button class="btn" type="submit" [disabled]="loading">{{ loading ? 'Please wait…' : 'Create Client Account' }}</button>
       </form>
       <p style="color: #617c89; margin-top: 12px;">
         Already have an account?

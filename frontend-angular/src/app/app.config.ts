@@ -14,16 +14,15 @@ import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
-
+import { AuthInterceptor } from './auth/auth-token.interceptor'; // ✅ correct
 import { routes } from './app.routes';
-import { AuthTokenInterceptor } from './auth/auth-token.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
     provideHttpClient(withInterceptorsFromDi()),
-    importProvidersFrom(FormsModule), // FormsModule for ngModel
-    { provide: HTTP_INTERCEPTORS, useClass: AuthTokenInterceptor, multi: true },
+    importProvidersFrom(FormsModule),
+    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }, // ✅ FIXED
   ]
 };

@@ -92,7 +92,7 @@
         </label>
 
         <div class="error" *ngIf="serverError">{{ serverError }}</div>
-        <button class="btn" type="submit">Register as Worker</button>
+        <button class="btn" type="submit" [disabled]="loading">{{ loading ? 'Please wait…' : 'Register as Worker' }}</button>
       </form>
 
       <p style="color: #617c89; margin-top: 12px;">

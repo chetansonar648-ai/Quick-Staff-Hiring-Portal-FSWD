@@ -61,6 +61,7 @@ export const routes: Routes = [
     canActivate: [AuthGuard],
     children: [
       { path: '', loadComponent: () => import('./apps/client/pages/dashboard/dashboard').then((m) => m.ClientDashboardComponent) },
+      { path: 'dashboard', loadComponent: () => import('./apps/client/pages/dashboard/dashboard').then((m) => m.ClientDashboardComponent) },
       { path: 'browse-staff', loadComponent: () => import('./apps/client/pages/browse-staff/browse-staff').then((m) => m.BrowseStaffComponent) },
       { path: 'bookings', loadComponent: () => import('./apps/client/pages/my-bookings/my-bookings').then((m) => m.MyBookingsComponent) },
       { path: 'saved-workers', loadComponent: () => import('./apps/client/pages/saved-workers/saved-workers').then((m) => m.SavedWorkersComponent) },

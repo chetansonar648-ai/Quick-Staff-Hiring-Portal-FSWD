@@ -52,9 +52,9 @@ export class LoginComponent {
       const role = res?.user?.role;
 
       if (role === 'admin') {
-        await this.router.navigate(['/admin']);
+        await this.router.navigate(['/admin/dashboard']);
       } else if (role === 'client') {
-        await this.router.navigate(['/client']);
+        await this.router.navigate(['/client/dashboard']);
       } else {
         await this.router.navigate(['/worker/dashboard']);
       }

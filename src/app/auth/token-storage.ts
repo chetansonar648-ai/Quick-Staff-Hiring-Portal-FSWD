@@ -13,3 +13,9 @@ export function setAuthToken(token: string): void {
   localStorage.setItem('qs_token', token);
 }
 
+export function setSessionUser(user: unknown): void {
+  const json = JSON.stringify(user);
+  localStorage.setItem('user', json);
+  localStorage.setItem('qs_user', json);
+}
+

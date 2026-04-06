@@ -65,7 +65,7 @@ Quick Staff is a comprehensive platform connecting clients with service professi
     ```
 3.  Create a `.env` file in the `backend` directory with your database credentials:
     ```env
-    PORT=4000
+    PORT=5000
     DATABASE_URL=postgresql://postgres:your_password@localhost:5432/quickstaff_db
     JWT_SECRET=your_jwt_secret_key_here
     ```
@@ -73,7 +73,7 @@ Quick Staff is a comprehensive platform connecting clients with service professi
     ```bash
     npm run dev
     ```
-    *Server runs on http://localhost:4000*
+    *Server runs on http://localhost:5000*
 
 ### 3. Frontend Setup
 1.  Navigate to the `frontend` directory:
@@ -203,3 +203,4 @@ Angular CLI does not come with an end-to-end testing framework by default. You c
 
 For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
 >>>>>>> frontend/master
+
