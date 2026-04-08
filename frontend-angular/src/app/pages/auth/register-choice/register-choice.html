@@ -1,38 +1,66 @@
-<div class="page" style="max-width: 960px;">
-  <header style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0;">
-    <div style="display: flex; align-items: center; gap: 8;">
-      <div style="width: 24px; height: 24px; color: #13a4ec;">
-        <svg fill="currentColor" viewBox="0 0 48 48">
-          <path clip-rule="evenodd" d="M24 4H6V17.3333V30.6667H24V44H42V30.6667V17.3333H24V4Z" fill-rule="evenodd" />
-        </svg>
+<div class="bg-background-light text-text-light min-h-screen">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <header class="flex items-center justify-between gap-4">
+      <a routerLink="/" class="flex items-center gap-3 min-w-0">
+        <div class="size-6 text-primary flex-shrink-0">
+          <svg fill="currentColor" viewBox="0 0 48 48">
+            <path clip-rule="evenodd" d="M24 4H6V17.3333V30.6667H24V44H42V30.6667V17.3333H24V4Z" fill-rule="evenodd" />
+          </svg>
+        </div>
+        <h2 class="text-lg font-bold truncate">Quick Staff</h2>
+      </a>
+      <a
+        routerLink="/login"
+        class="flex min-w-[84px] items-center justify-center rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold hover:bg-primary/90"
+      >
+        Login
+      </a>
+    </header>
+
+    <section class="text-center mt-10 mb-10">
+      <h1 class="text-4xl sm:text-5xl font-black tracking-tight">Join Quick Staff</h1>
+      <p class="text-subtle-light mt-3 max-w-2xl mx-auto">
+        Choose your path below. Hire professionals or find your next gig in minutes.
+      </p>
+    </section>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="bg-white border border-gray-200 rounded-2xl p-8 text-center flex flex-col gap-4">
+        <div class="text-primary text-[50px] material-symbols-outlined">business_center</div>
+        <div class="space-y-2">
+          <h3 class="text-xl font-extrabold text-text-light">I&apos;m a Client</h3>
+          <p class="text-subtle-light">
+            Post jobs, find skilled professionals, and manage projects with ease.
+          </p>
+        </div>
+        <a
+          routerLink="/register/client"
+          class="mt-2 flex items-center justify-center rounded-lg h-11 px-5 bg-primary text-white text-sm font-bold hover:bg-primary/90"
+        >
+          Register as a Client
+        </a>
       </div>
-      <h2 style="margin: 0;">Quick Staff</h2>
-    </div>
-    <a routerLink="/login" class="btn">Login</a>
-  </header>
 
-  <section style="text-align: center; margin: 32px 0;">
-    <h1 style="font-size: 40px; font-weight: 900; margin: 0;">Join Quick Staff</h1>
-    <p style="color: #617c89; margin-top: 8px;">Choose your path below. Hire professionals or find your next gig in minutes.</p>
-  </section>
+      <div class="bg-white border border-gray-200 rounded-2xl p-8 text-center flex flex-col gap-4">
+        <div class="text-primary text-[50px] material-symbols-outlined">construction</div>
+        <div class="space-y-2">
+          <h3 class="text-xl font-extrabold text-text-light">I&apos;m a Gig Worker</h3>
+          <p class="text-subtle-light">
+            Showcase your skills, find flexible work opportunities, and connect with clients.
+          </p>
+        </div>
+        <a
+          routerLink="/register/worker"
+          class="mt-2 flex items-center justify-center rounded-lg h-11 px-5 bg-primary text-white text-sm font-bold hover:bg-primary/90"
+        >
+          Register as a Gig Worker
+        </a>
+      </div>
+    </div>
 
-  <div class="grid" style="grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); gap: 20px;">
-    <div class="card" style="text-align: center; border: 1px solid #e5e8ef;">
-      <div style="color: #13a4ec; font-size: 50px;" class="material-symbols-outlined">business_center</div>
-      <h3 style="margin-bottom: 6px;">I&apos;m a Client</h3>
-      <p style="color: #617c89; margin-top: 0;">Post jobs, find skilled professionals, and manage projects with ease.</p>
-      <a routerLink="/register/client" class="btn" style="margin-top: 10px;">Register as a Client</a>
-    </div>
-    <div class="card" style="text-align: center; border: 1px solid #e5e8ef;">
-      <div style="color: #13a4ec; font-size: 50px;" class="material-symbols-outlined">construction</div>
-      <h3 style="margin-bottom: 6px;">I&apos;m a Gig Worker</h3>
-      <p style="color: #617c89; margin-top: 0;">Showcase your skills, find flexible work opportunities, and connect with clients.</p>
-      <a routerLink="/register/worker" class="btn" style="margin-top: 10px;">Register as a Gig Worker</a>
-    </div>
+    <footer class="text-center text-subtle-light mt-12 border-t border-gray-200 pt-6">
+      © 2026 Quick Staff. All rights reserved.
+    </footer>
   </div>
-
-  <footer style="text-align: center; color: #617c89; margin-top: 32px; border-top: 1px solid #e5e8ef; padding-top: 16px;">
-    © 2024 Quick Staff. All rights reserved.
-  </footer>
 </div>
 

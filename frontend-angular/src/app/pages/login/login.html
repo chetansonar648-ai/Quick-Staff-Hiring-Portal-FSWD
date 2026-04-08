@@ -12,7 +12,7 @@
             <div class="absolute inset-0 bg-[#0d7ff2]/80"></div>
 
             <div class="relative z-10 flex flex-col items-start gap-6 p-12 text-white max-w-md">
-              <div class="text-3xl font-bold">Quick Staff</div>
+              <a routerLink="/" class="text-3xl font-bold">Quick Staff</a>
               <h1 class="text-4xl font-black leading-tight tracking-tight">
                 Connecting Talent. Powering Business.
               </h1>
@@ -37,7 +37,7 @@
               </div>
 
               <!-- FORM -->
-              <form class="flex w-full flex-col gap-6" (ngSubmit)="onSubmit()">
+              <form class="flex w-full flex-col gap-6" [formGroup]="form" (ngSubmit)="onSubmit()">
 
                 <!-- EMAIL -->
                 <label class="flex flex-col w-full">
@@ -56,10 +56,12 @@
                       name="email"
                       class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-r-lg text-[#111418] dark:text-[#f5f7f8] focus:outline-0 focus:ring-2 focus:ring-[#0d7ff2]/50 border border-[#dbe0e6] dark:border-[#344150] bg-white dark:bg-[#101922] h-12 placeholder:text-[#60758a] dark:placeholder:text-[#a0b0c0] px-3 text-base font-normal leading-normal border-l-0"
                       placeholder="e.g., yourname@example.com"
-                      [(ngModel)]="form.email"
+                      formControlName="email"
                       required
                     />
                   </div>
+                  <p *ngIf="form.controls.email.touched && form.controls.email.errors?.['required']" class="text-sm text-red-600 mt-2">Email is required</p>
+                  <p *ngIf="form.controls.email.touched && form.controls.email.errors?.['email']" class="text-sm text-red-600 mt-2">Enter a valid email</p>
                 </label>
 
                 <!-- PASSWORD -->
@@ -80,7 +82,7 @@
                       [type]="showPassword ? 'text' : 'password'"
                       class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden text-[#111418] dark:text-[#f5f7f8] focus:outline-0 focus:ring-2 focus:ring-[#0d7ff2]/50 border border-[#dbe0e6] dark:border-[#344150] bg-white dark:bg-[#101922] h-12 placeholder:text-[#60758a] dark:placeholder:text-[#a0b0c0] px-3 text-base font-normal leading-normal border-l-0 border-r-0"
                       placeholder="Enter your password"
-                      [(ngModel)]="form.password"
+                      formControlName="password"
                       required
                     />
 
@@ -93,6 +95,7 @@
                       </span>
                     </div>
                   </div>
+                  <p *ngIf="form.controls.password.touched && form.controls.password.errors?.['required']" class="text-sm text-red-600 mt-2">Password is required</p>
                 </label>
 
                 <!-- ERROR -->
@@ -102,7 +105,7 @@
 
                 <!-- FORGOT PASSWORD -->
                 <div class="flex flex-wrap items-center justify-end gap-4">
-                  <a class="text-sm font-medium text-[#0d7ff2] hover:underline">
+                  <a routerLink="/forgot-password" class="text-sm font-medium text-[#0d7ff2] hover:underline">
                     Forgot Password?
                   </a>
                 </div>
@@ -121,7 +124,7 @@
 
                   <p class="text-center text-sm text-[#60758a] dark:text-[#a0b0c0]">
                     New to Quick Staff?
-                    <a class="font-bold text-[#0d7ff2] hover:underline">
+                    <a routerLink="/register" class="font-bold text-[#0d7ff2] hover:underline">
                       Create an account
                     </a>
                   </p>

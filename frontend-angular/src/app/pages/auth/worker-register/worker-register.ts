@@ -285,8 +285,8 @@
 // }
 
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Component, OnDestroy, inject } from '@angular/core';
+import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 
 import { AuthService } from '../../../services/auth.service';
@@ -294,85 +294,92 @@ import { AuthService } from '../../../services/auth.service';
 @Component({
   selector: 'app-worker-register',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule], // ✅ IMPORTANT
-  templateUrl: './worker-register.html'
+  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  templateUrl: './worker-register.html',
 })
 export class WorkerRegisterComponent implements OnDestroy {
+  private readonly fb = inject(FormBuilder);
 
-  form = {
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    phone: '',
-    address: '',
-    skills: '',
-    hourly_rate: '',
-    terms: false
-  };
-
-  error = '';
   loading = false;
+  error = '';
   showPassword = false;
   showConfirmPassword = false;
   showSuccess = false;
 
+  readonly form = this.fb.group(
+    {
+      name: ['', [Validators.required, Validators.minLength(3)]],
+      email: ['', [Validators.required, Validators.email]],
+      phone: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
+      address: ['', [Validators.required]],
+      password: ['', [Validators.required, Validators.minLength(6)]],
+      confirmPassword: ['', [Validators.required]],
+      skills: [''],
+      hourly_rate: [''],
+      terms: [false, [Validators.requiredTrue]],
+    },
+    { validators: [this.matchPasswordsValidator] },
+  );
+
   private successTimer: ReturnType<typeof setTimeout> | null = null;
 
-  constructor(private auth: AuthService, private router: Router) {}
+  constructor(
+    private readonly auth: AuthService,
+    private readonly router: Router,
+  ) {}
 
   ngOnDestroy(): void {
     if (this.successTimer) clearTimeout(this.successTimer);
+  }
+
+  private matchPasswordsValidator(control: AbstractControl): ValidationErrors | null {
+    const password = control.get('password')?.value;
+    const confirmPassword = control.get('confirmPassword')?.value;
+    if (!password || !confirmPassword) return null;
+    return password === confirmPassword ? null : { passwordMismatch: true };
   }
 
   private startSuccessRedirect(): void {
     if (this.successTimer) clearTimeout(this.successTimer);
     this.successTimer = setTimeout(() => {
       this.router.navigate(['/login']);
-    }, 3000);
+    }, 5000);
   }
 
   handleSuccessClose(): void {
     this.router.navigate(['/login']);
   }
 
+  get f() {
+    return this.form.controls;
+  }
+
   async onSubmit(): Promise<void> {
     this.error = '';
-
-    if (this.form.password !== this.form.confirmPassword) {
-      this.error = 'Passwords do not match';
-      return;
-    }
-
-    if (!this.form.terms) {
-      this.error = 'Please agree to the Terms and Conditions';
-      return;
-    }
+    this.form.markAllAsTouched();
+    if (this.form.invalid) return;
 
     this.loading = true;
-
-    const skillsArray = this.form.skills
-      ? this.form.skills.split(',').map((s) => s.trim()).filter(Boolean)
-      : [];
-
-    const hourlyRateNum = this.form.hourly_rate ? parseFloat(this.form.hourly_rate) : undefined;
-
-    const payload = {
-      name: this.form.name,
-      email: this.form.email,
-      password: this.form.password,
-      phone: this.form.phone || undefined,
-      address: this.form.address || undefined,
-      skills: skillsArray.length ? skillsArray : undefined,
-      hourly_rate: Number.isFinite(hourlyRateNum) ? hourlyRateNum : undefined,
-      role: 'worker' as const,
-    };
-
     try {
-      await this.auth.register(payload);
+      const v = this.form.getRawValue();
+
+      const skillsArray = v.skills ? v.skills.split(',').map((s) => s.trim()).filter(Boolean) : [];
+      const hourlyRateNum = v.hourly_rate ? parseFloat(v.hourly_rate) : undefined;
+
+      await this.auth.register({
+        name: (v.name || '').trim(),
+        email: (v.email || '').trim(),
+        password: v.password || '',
+        phone: v.phone || '',
+        address: v.address || '',
+        skills: skillsArray.length ? skillsArray : undefined,
+        hourly_rate: Number.isFinite(hourlyRateNum) ? hourlyRateNum : undefined,
+        role: 'worker',
+      });
+
       this.showSuccess = true;
       this.startSuccessRedirect();
-    } catch (err: any) {
+    } catch (err) {
       this.error = AuthService.errorMessage(err);
     } finally {
       this.loading = false;

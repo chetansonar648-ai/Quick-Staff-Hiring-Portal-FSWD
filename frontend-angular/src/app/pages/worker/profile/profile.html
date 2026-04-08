@@ -239,7 +239,7 @@
           class="w-full text-center bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-primary focus:border-primary p-2"
           type="text"
           placeholder="09:00 AM"
-          [ngModel]="profile.availability?.[day]?.start || ''"
+          [ngModel]="profile.availability[day]?.start || ''"
           (ngModelChange)="updateAvailability(day, 'start', $event)"
         />
         <span class="text-slate-400">-</span>
@@ -247,7 +247,7 @@
           class="w-full text-center bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-primary focus:border-primary p-2"
           type="text"
           placeholder="05:00 PM"
-          [ngModel]="profile.availability?.[day]?.end || ''"
+          [ngModel]="profile.availability[day]?.end || ''"
           (ngModelChange)="updateAvailability(day, 'end', $event)"
         />
       </div>

@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Component, inject } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 
 import { AuthService } from '../../services/auth.service';
@@ -8,15 +8,20 @@ import { AuthService } from '../../services/auth.service';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule],
   templateUrl: './login.html',
 })
 export class LoginComponent {
+  private readonly fb = inject(FormBuilder);
+
   // The React version loads this from a bundled asset import.
   // In Angular we keep it as a static path (it may be missing at runtime, but it won't break compilation).
   loginBg: string = 'assets/login_background.png';
 
-  form: { email: string; password: string } = { email: '', password: '' };
+  readonly form = this.fb.group({
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', [Validators.required]],
+  });
   error: string = '';
   loading: boolean = false;
   showPassword: boolean = false;
@@ -34,17 +39,12 @@ export class LoginComponent {
     this.error = '';
     if (this.loading) return;
 
-    const email = (this.form.email || '').trim();
-    const password = this.form.password || '';
+    this.form.markAllAsTouched();
+    if (this.form.invalid) return;
 
-    if (!email) {
-      this.error = 'Email is required';
-      return;
-    }
-    if (!password) {
-      this.error = 'Password is required';
-      return;
-    }
+    const v = this.form.getRawValue();
+    const email = (v.email || '').trim();
+    const password = v.password || '';
 
     this.loading = true;
     try {

@@ -1,64 +1,99 @@
-<div class="page" style="max-width: 1100px;">
-  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: center;">
-    <div class="card" style="border: 1px solid #e5e8ef; background: #fff;">
-      <h2 style="font-size: 30px; margin: 0 0 8px;">Create Your Client Account</h2>
-      <p style="color: #617c89; margin-top: 0;">Sign up to post jobs and hire top talent instantly.</p>
-      <form class="grid" style="gap: 12px; margin-top: 16px;" (ngSubmit)="onSubmit()">
-        <div class="form-group">
-          <label>Full Name</label>
-          <input name="name" placeholder="Enter your full name" [(ngModel)]="form.name" />
-          <span class="error" *ngIf="errors.name">{{ errors.name }}</span>
-        </div>
-        <div class="form-group">
-          <label>Email Address</label>
-          <input
-            name="email"
-            type="email"
-            placeholder="Enter your email"
-            [(ngModel)]="form.email"
-          />
-          <span class="error" *ngIf="errors.email">{{ errors.email }}</span>
-        </div>
-        <div class="form-group">
-          <label>Password</label>
-          <input
-            name="password"
-            type="password"
-            placeholder="Create a password"
-            [(ngModel)]="form.password"
-          />
-          <span class="error" *ngIf="errors.password">{{ errors.password }}</span>
-        </div>
-        <div class="form-group">
-          <label>Confirm Password</label>
-          <input
-            name="confirm"
-            type="password"
-            placeholder="Confirm password"
-            [(ngModel)]="form.confirm"
-          />
-          <span class="error" *ngIf="errors.confirm">{{ errors.confirm }}</span>
-        </div>
-        <label style="display: flex; gap: 8px; align-items: flex-start; font-size: 14px; color: #617c89;">
-          <input type="checkbox" style="width: 16px; height: 16px; margin-top: 2px;" />
-          I agree to the <a routerLink="/terms" style="color: #005a9c; font-weight: 700;">Terms</a> and
-          <a routerLink="/privacy-policy" style="color: #005a9c; font-weight: 700;">Privacy Policy</a>.
-        </label>
-        <div class="error" *ngIf="serverError">{{ serverError }}</div>
-        <button class="btn" type="submit" [disabled]="loading">{{ loading ? 'Please wait…' : 'Create Client Account' }}</button>
-      </form>
-      <p style="color: #617c89; margin-top: 12px;">
-        Already have an account?
-        <a routerLink="/login" style="color: #005a9c; font-weight: 700;">Login here</a>
-      </p>
-    </div>
+<div class="bg-background-light text-text-light min-h-screen">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+      <!-- Left: Image -->
+      <div class="hidden lg:block rounded-2xl overflow-hidden border border-gray-200 bg-gray-50">
+        <div
+          class="h-full min-h-[520px] bg-cover bg-center"
+          style="background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuA6SSv1L28FFGZMWp9VGeMlQf53dPJ6CvAm7VKfiZLM7tZ1B-U_Wuq6nOOtuwRjX-t6RgqHe30FEbgzm6iHDztGLJDc-6v93cZLHrGWj7l9TsQ7NI8HCBCTxQFioktA1TrwdFQh0KjTHQzmi_YEJNZb1l94ltNh_0oYuergT8rR97s46LuVcoXWTEA4Po1Gc8PgM8Q3AmKpLm6djjc98NYZrSbxZ2OlN5SeVYBBxksXVhNVWT00QyCV6MEun_IGhfEbw1d8ekfovg)"
+        ></div>
+      </div>
 
-    <div class="card" style="background: #f4f7f9; border: 1px solid #e5e8ef;">
-      <div
-        style="aspect-ratio: 1/1; background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuA6SSv1L28FFGZMWp9VGeMlQf53dPJ6CvAm7VKfiZLM7tZ1B-U_Wuq6nOOtuwRjX-t6RgqHe30FEbgzm6iHDztGLJDc-6v93cZLHrGWj7l9TsQ7NI8HCBCTxQFioktA1TrwdFQh0KjTHQzmi_YEJNZb1l94ltNh_0oYuergT8rR97s46LuVcoXWTEA4Po1Gc8PgM8Q3AmKpLm6djjc98NYZrSbxZ2OlN5SeVYBBxksXVhNVWT00QyCV6MEun_IGhfEbw1d8ekfovg); background-size: cover; background-position: center; border-radius: 12px; margin-bottom: 16px;"
-      ></div>
-      <h3 style="margin: 0; font-size: 24px; font-weight: 900;">Find skilled gig workers, fast.</h3>
-      <p style="color: #617c89; margin-top: 8px;">Your on-demand workforce awaits.</p>
+      <!-- Right: Form -->
+      <div class="bg-white border border-gray-200 rounded-2xl p-6 sm:p-8">
+        <div class="mb-6">
+          <h2 class="text-3xl font-black tracking-tight">Create Your Client Account</h2>
+          <p class="text-subtle-light mt-2">Sign up to post jobs and hire top talent instantly.</p>
+        </div>
+
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="flex flex-col gap-2">
+              <label class="text-sm font-medium">Full Name</label>
+              <input formControlName="name" class="h-11 rounded-lg border border-border-light px-3" placeholder="Enter your full name" />
+              <p *ngIf="f.name.touched && f.name.errors?.['required']" class="text-sm text-red-600">Full Name is required</p>
+              <p *ngIf="f.name.touched && f.name.errors?.['minlength']" class="text-sm text-red-600">Full Name must be at least 3 characters</p>
+            </div>
+
+            <div class="flex flex-col gap-2">
+              <label class="text-sm font-medium">Email Address</label>
+              <input formControlName="email" type="email" class="h-11 rounded-lg border border-border-light px-3" placeholder="Enter your email" />
+              <p *ngIf="f.email.touched && f.email.errors?.['required']" class="text-sm text-red-600">Email is required</p>
+              <p *ngIf="f.email.touched && f.email.errors?.['email']" class="text-sm text-red-600">Enter a valid email</p>
+            </div>
+
+            <div class="flex flex-col gap-2">
+              <label class="text-sm font-medium">Phone Number</label>
+              <input formControlName="phone" class="h-11 rounded-lg border border-border-light px-3" placeholder="10 digit phone number" />
+              <p *ngIf="f.phone.touched && f.phone.errors?.['required']" class="text-sm text-red-600">Phone Number is required</p>
+              <p *ngIf="f.phone.touched && f.phone.errors?.['pattern']" class="text-sm text-red-600">Phone Number must be 10 digits</p>
+            </div>
+
+            <div class="flex flex-col gap-2">
+              <label class="text-sm font-medium">Address</label>
+              <input formControlName="address" class="h-11 rounded-lg border border-border-light px-3" placeholder="Street, City, State" />
+              <p *ngIf="f.address.touched && f.address.errors?.['required']" class="text-sm text-red-600">Address is required</p>
+            </div>
+
+            <div class="flex flex-col gap-2">
+              <label class="text-sm font-medium">Password</label>
+              <input formControlName="password" type="password" class="h-11 rounded-lg border border-border-light px-3" placeholder="Create a password" />
+              <p *ngIf="f.password.touched && f.password.errors?.['required']" class="text-sm text-red-600">Password is required</p>
+              <p *ngIf="f.password.touched && f.password.errors?.['minlength']" class="text-sm text-red-600">Password must be at least 6 characters</p>
+            </div>
+
+            <div class="flex flex-col gap-2">
+              <label class="text-sm font-medium">Confirm Password</label>
+              <input formControlName="confirmPassword" type="password" class="h-11 rounded-lg border border-border-light px-3" placeholder="Confirm password" />
+              <p *ngIf="f.confirmPassword.touched && f.confirmPassword.errors?.['required']" class="text-sm text-red-600">Confirm Password is required</p>
+              <p *ngIf="form.touched && form.errors?.['passwordMismatch']" class="text-sm text-red-600">Passwords must match</p>
+            </div>
+          </div>
+
+          <div class="text-sm text-red-600" *ngIf="error">{{ error }}</div>
+
+          <button
+            type="submit"
+            [disabled]="loading"
+            class="h-12 w-full bg-primary text-white rounded-lg font-bold hover:bg-primary/90"
+          >
+            {{ loading ? 'Please wait…' : 'Create Client Account' }}
+          </button>
+
+          <p class="text-subtle-light text-sm mt-2 text-center">
+            Already have an account?
+            <a routerLink="/login" class="text-primary font-bold hover:underline">Login here</a>
+          </p>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success Modal -->
+  <div *ngIf="showSuccess" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-xl p-8 max-w-md w-full mx-4 shadow-2xl text-center">
+      <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <span class="material-symbols-outlined text-4xl text-green-600">check_circle</span>
+      </div>
+      <h2 class="text-2xl font-bold text-gray-900 mb-2">Registration Successful!</h2>
+      <p class="text-gray-600 mb-6">Your account has been created successfully. You will be redirected to the login page shortly.</p>
+      <button
+        type="button"
+        (click)="handleSuccessClose()"
+        class="h-12 w-full bg-primary text-white rounded-lg font-bold hover:bg-primary/90 transition-colors"
+      >
+        OK
+      </button>
     </div>
   </div>
 </div>
