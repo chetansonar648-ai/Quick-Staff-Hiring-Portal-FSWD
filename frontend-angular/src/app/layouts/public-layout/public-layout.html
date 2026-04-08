@@ -15,14 +15,17 @@
         <h2 class="text-lg font-bold tracking-tight">Quick Staff Hiring Portal</h2>
       </a>
       <div class="hidden md:flex items-center gap-8">
-        <a class="text-sm font-medium hover:text-primary" routerLink="/" fragment="categories">
+        <a class="text-sm font-medium hover:text-primary" routerLink="/categories">
           Staff Categories
         </a>
-        <a class="text-sm font-medium hover:text-primary" routerLink="/" fragment="how">
+        <a class="text-sm font-medium hover:text-primary" routerLink="/how-it-works">
           How It Works
         </a>
-        <a class="text-sm font-medium hover:text-primary" routerLink="/" fragment="about">
+        <a class="text-sm font-medium hover:text-primary" routerLink="/about">
           About Us
+        </a>
+        <a class="text-sm font-medium hover:text-primary" routerLink="/contact">
+          Contact
         </a>
         <div class="flex gap-2">
           <a
@@ -52,24 +55,24 @@
         <div class="space-y-3">
           <h3 class="text-sm font-semibold uppercase">Company</h3>
           <ul class="space-y-2 text-sm text-subtle-light">
-            <li>About Us</li>
-            <li>Contact</li>
-            <li>Careers</li>
+            <li><a class="hover:text-primary hover:underline cursor-pointer inline-block" routerLink="/about">About Us</a></li>
+            <li><a class="hover:text-primary hover:underline cursor-pointer inline-block" routerLink="/contact">Contact</a></li>
+            <li><a class="hover:text-primary hover:underline cursor-pointer inline-block" routerLink="/careers">Careers</a></li>
           </ul>
         </div>
         <div class="space-y-3">
           <h3 class="text-sm font-semibold uppercase">Support</h3>
           <ul class="space-y-2 text-sm text-subtle-light">
-            <li>FAQ</li>
-            <li>Help Center</li>
-            <li>Trust & Safety</li>
+            <li><a class="hover:text-primary hover:underline cursor-pointer inline-block" routerLink="/faq">FAQ</a></li>
+            <li><a class="hover:text-primary hover:underline cursor-pointer inline-block" routerLink="/help">Help Center</a></li>
+            <li><a class="hover:text-primary hover:underline cursor-pointer inline-block" routerLink="/trust-safety">Trust & Safety</a></li>
           </ul>
         </div>
         <div class="space-y-3">
           <h3 class="text-sm font-semibold uppercase">Legal</h3>
           <ul class="space-y-2 text-sm text-subtle-light">
-            <li>Privacy Policy</li>
-            <li>Terms of Service</li>
+            <li><a class="hover:text-primary hover:underline cursor-pointer inline-block" routerLink="/privacy-policy">Privacy Policy</a></li>
+            <li><a class="hover:text-primary hover:underline cursor-pointer inline-block" routerLink="/terms">Terms of Service</a></li>
           </ul>
         </div>
         <div class="space-y-3">

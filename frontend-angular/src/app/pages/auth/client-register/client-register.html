@@ -41,8 +41,8 @@
         </div>
         <label style="display: flex; gap: 8px; align-items: flex-start; font-size: 14px; color: #617c89;">
           <input type="checkbox" style="width: 16px; height: 16px; margin-top: 2px;" />
-          I agree to the <a href="#" style="color: #005a9c; font-weight: 700;">Terms</a> and
-          <a href="#" style="color: #005a9c; font-weight: 700;">Privacy Policy</a>.
+          I agree to the <a routerLink="/terms" style="color: #005a9c; font-weight: 700;">Terms</a> and
+          <a routerLink="/privacy-policy" style="color: #005a9c; font-weight: 700;">Privacy Policy</a>.
         </label>
         <div class="error" *ngIf="serverError">{{ serverError }}</div>
         <button class="btn" type="submit" [disabled]="loading">{{ loading ? 'Please wait…' : 'Create Client Account' }}</button>
