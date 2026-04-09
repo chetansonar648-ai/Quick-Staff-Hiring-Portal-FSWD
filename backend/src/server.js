@@ -30,14 +30,25 @@ const PORT = process.env.PORT || 5000;
 // ================= MIDDLEWARE =================
 app.use(helmet());
 
+// app.use(
+//   cors({
+//     origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:4200'],
+//     credentials: true,
+//     methods: ['GET', 'POST', 'PUT', 'DELETE'],
+//     allowedHeaders: ['Content-Type', 'Authorization'],
+//   })
+// );
+
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:4200'],
+    origin: 'http://localhost:4200',
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   })
 );
+
+app.options('*', cors()); // ⭐ THIS LINE FIXES YOUR ISSUE
 
 app.use(express.json());
 app.use(morgan('dev'));

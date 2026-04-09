@@ -48,8 +48,10 @@ export class LoginComponent {
 
     this.loading = true;
     try {
+      console.debug('[LOGIN] submitting', { email });
       const res = await this.authService.login(email, password);
       const role = res?.user?.role;
+      console.debug('[LOGIN] success', { role, userId: res?.user?.id });
 
       if (role === 'admin') {
         await this.router.navigate(['/admin']);

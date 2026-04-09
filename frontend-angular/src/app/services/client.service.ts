@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
-import { lastValueFrom } from 'rxjs';
+import { Observable, catchError, lastValueFrom, throwError, timeout } from 'rxjs';
 
 import { environment } from '../../environments/environment';
 
@@ -38,18 +38,28 @@ export interface ClientProfileApi {
 @Injectable({ providedIn: 'root' })
 export class ClientService {
   private readonly baseUrl = `${environment.apiBaseUrl}/api`;
+  private readonly requestTimeoutMs = 12000;
 
   constructor(private readonly http: HttpClient) {}
 
+  private async call<T>(obs: Observable<T>): Promise<T> {
+    return lastValueFrom(
+      obs.pipe(
+        timeout(this.requestTimeoutMs),
+        catchError((err) => throwError(() => err)),
+      ),
+    );
+  }
+
   async getClientStats(): Promise<ClientStats> {
     const [activeBookings, completedBookings] = await Promise.all([
-      lastValueFrom(
-        this.http.get<any[]>(`${this.baseUrl}/bookings`, {
+      this.call(
+        this.http.get<any[]>(`${this.baseUrl}/bookings/client`, {
           params: new HttpParams().set('status', 'all_active'),
         })
       ),
-      lastValueFrom(
-        this.http.get<any[]>(`${this.baseUrl}/bookings`, {
+      this.call(
+        this.http.get<any[]>(`${this.baseUrl}/bookings/client`, {
           params: new HttpParams().set('status', 'completed'),
         })
       ),
@@ -64,12 +74,12 @@ export class ClientService {
   }
 
   async getRecommendedStaff(limit = 4): Promise<StaffCard[]> {
-    const workers = await lastValueFrom(this.http.get<any[]>(`${this.baseUrl}/workers`));
+    const workers = await this.call(this.http.get<any[]>(`${this.baseUrl}/workers`));
     return workers.slice(0, limit).map((w) => this.mapWorkerToStaffCard(w));
   }
 
   async getBrowseCategories(): Promise<BrowseCategory[]> {
-    const categories = await lastValueFrom(
+    const categories = await this.call(
       this.http.get<BrowseCategory[]>(`${this.baseUrl}/workers/categories/list`)
     );
     return categories || [];
@@ -92,28 +102,28 @@ export class ClientService {
     if (filters.max_price) params = params.set('max_price', filters.max_price);
     if (filters.min_rating) params = params.set('min_rating', filters.min_rating);
 
-    const workers = await lastValueFrom(
+    const workers = await this.call(
       this.http.get<any[]>(`${this.baseUrl}/workers`, { params })
     );
     return (workers || []).map((w) => this.mapWorkerToStaffCard(w, true));
   }
 
   async saveWorker(workerId: number): Promise<void> {
-    await lastValueFrom(this.http.post(`${this.baseUrl}/saved-workers`, { worker_id: workerId }));
+    await this.call(this.http.post(`${this.baseUrl}/saved-workers`, { worker_id: workerId }));
   }
 
   async removeSavedWorker(workerId: number): Promise<void> {
-    await lastValueFrom(this.http.delete(`${this.baseUrl}/saved-workers/${workerId}`));
+    await this.call(this.http.delete(`${this.baseUrl}/saved-workers/${workerId}`));
   }
 
   async getSavedWorkers(): Promise<StaffCard[]> {
-    const saved = await lastValueFrom(this.http.get<any[]>(`${this.baseUrl}/saved-workers`));
+    const saved = await this.call(this.http.get<any[]>(`${this.baseUrl}/saved-workers`));
 
     // The saved-workers endpoint returns a minimal payload. Enrich each worker using the worker profile endpoint.
     const enriched = await Promise.all(
       (saved || []).map(async (s) => {
         const workerId = s.worker_id as number;
-        const profile = await lastValueFrom(this.http.get<any>(`${this.baseUrl}/workers/${workerId}`));
+        const profile = await this.call(this.http.get<any>(`${this.baseUrl}/workers/${workerId}`));
         const card = this.mapWorkerToStaffCard(profile, true);
         return {
           ...card,
@@ -127,7 +137,7 @@ export class ClientService {
   }
 
   async getMyProfile(): Promise<ClientProfileApi> {
-    const me = await lastValueFrom(this.http.get<any>(`${this.baseUrl}/auth/me`));
+    const me = await this.call(this.http.get<any>(`${this.baseUrl}/auth/me`));
     const u = me?.user || me;
     return {
       name: u?.name ?? '',
@@ -144,7 +154,7 @@ export class ClientService {
     address?: string;
     profile_image?: string;
   }): Promise<void> {
-    await lastValueFrom(this.http.put(`${this.baseUrl}/users/me`, payload));
+    await this.call(this.http.put(`${this.baseUrl}/users/me`, payload));
   }
 
   private mapWorkerToStaffCard(worker: any, includeSkillsForModal = false): StaffCard {
@@ -163,8 +173,14 @@ export class ClientService {
   }
 
   static errorMessage(err: unknown): string {
+    if (err && typeof err === 'object' && 'name' in err && (err as { name?: string }).name === 'TimeoutError') {
+      return 'Backend is taking too long to respond. Please check that the server is running on http://localhost:5000.';
+    }
     if (err && typeof err === 'object' && 'error' in err) {
       const e = err as HttpErrorResponse;
+      if (e.status === 0) {
+        return 'Cannot reach backend. Please ensure it is running on http://localhost:5000 and try again.';
+      }
       return (e.error?.message as string | undefined) || e.message || 'Request failed';
     }
     return err instanceof Error ? err.message : 'Request failed';

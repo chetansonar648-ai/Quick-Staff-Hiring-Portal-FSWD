@@ -28,7 +28,7 @@ export class WorkerDashboardComponent implements OnInit, OnDestroy {
     private readonly workerService: WorkerService,
   ) {}
 
-  async ngOnInit(): Promise<void> {
+  /*async ngOnInit(): Promise<void> {
     this.currentPath = this.router.url.split('?')[0];
     this.sub = this.router.events
       .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
@@ -36,8 +36,23 @@ export class WorkerDashboardComponent implements OnInit, OnDestroy {
         this.currentPath = e.urlAfterRedirects.split('?')[0];
       });
 
-    void this.loadDashboardData();
-  }
+    //void this.loadDashboardData();
+    await this.loadDashboardData();
+  }*/
+ async ngOnInit(): Promise<void> {
+  this.currentPath = this.router.url.split('?')[0];
+
+  this.sub = this.router.events
+    .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
+    .subscribe(() => {
+      this.currentPath = this.router.url.split('?')[0];
+
+      // 🔥 THIS LINE FIXES YOUR ISSUE
+      this.loadDashboardData();
+    });
+
+  await this.loadDashboardData();
+}
 
   ngOnDestroy(): void {
     this.sub?.unsubscribe();

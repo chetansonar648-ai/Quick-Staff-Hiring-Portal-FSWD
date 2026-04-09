@@ -26,14 +26,25 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
+// app.use(
+//   cors({
+//     origin: process.env.CLIENT_ORIGIN?.split(',') || ['http://localhost:4200'],
+//     credentials: true,
+//     methods: ['GET', 'POST', 'PUT', 'DELETE'],
+//     allowedHeaders: ['Content-Type', 'Authorization'],
+//   })
+// );
+
 app.use(
   cors({
-    origin: process.env.CLIENT_ORIGIN?.split(',') || ['http://localhost:4200'],
+    origin: 'http://localhost:4200',
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   })
 );
+
+app.options('*', cors());
 
 app.use(express.json());
 app.use(cookieParser());

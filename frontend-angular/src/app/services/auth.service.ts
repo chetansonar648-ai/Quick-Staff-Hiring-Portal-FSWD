@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { lastValueFrom } from 'rxjs';
+import { Observable, lastValueFrom, throwError, timeout, catchError } from 'rxjs';
 
 import { environment } from '../../environments/environment';
 import { setAuthToken, setSessionUser } from '../auth/token-storage';
@@ -54,8 +54,18 @@ export interface MeResponse {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly baseUrl = `${environment.apiBaseUrl}/api/auth`;
+  private readonly requestTimeoutMs = 12000;
 
   constructor(private readonly http: HttpClient) {}
+
+  private async call<T>(obs: Observable<T>): Promise<T> {
+    return lastValueFrom(
+      obs.pipe(
+        timeout(this.requestTimeoutMs),
+        catchError((err) => throwError(() => err)),
+      ),
+    );
+  }
 
   getToken(): string | null {
     return localStorage.getItem('token');
@@ -74,6 +84,15 @@ export class AuthService {
   private persistSession(user: AuthUser, token: string): void {
     setAuthToken(token);
     setSessionUser(user);
+    try {
+      console.debug('[AUTH] session persisted', {
+        userId: user?.id,
+        role: user?.role,
+        tokenPrefix: token ? token.slice(0, 12) + '…' : null,
+      });
+    } catch {
+      // ignore
+    }
   }
 
   private unwrapAuth(res: ApiAuthEnvelope & Partial<LoginResponse>): LoginResponse {
@@ -87,8 +106,8 @@ export class AuthService {
   }
 
   async login(email: string, password: string): Promise<LoginResponse> {
-    const res = await lastValueFrom(
-      this.http.post<ApiAuthEnvelope>(`${this.baseUrl}/login`, { email, password })
+    const res = await this.call(
+      this.http.post<ApiAuthEnvelope>(`${this.baseUrl}/login`, { email, password }),
     );
     const login = this.unwrapAuth(res);
     this.persistSession(login.user, login.token);
@@ -96,8 +115,8 @@ export class AuthService {
   }
 
   async register(body: RegisterBody): Promise<LoginResponse> {
-    const res = await lastValueFrom(
-      this.http.post<ApiAuthEnvelope>(`${this.baseUrl}/register`, body)
+    const res = await this.call(
+      this.http.post<ApiAuthEnvelope>(`${this.baseUrl}/register`, body),
     );
     const login = this.unwrapAuth(res);
     this.persistSession(login.user, login.token);
@@ -105,7 +124,7 @@ export class AuthService {
   }
 
   async me(): Promise<MeResponse> {
-    const res = await lastValueFrom(this.http.get<ApiAuthEnvelope>(`${this.baseUrl}/me`));
+    const res = await this.call(this.http.get<ApiAuthEnvelope>(`${this.baseUrl}/me`));
     const user = res?.data?.user ?? null;
     if (user) {
       setSessionUser(user);
@@ -114,15 +133,19 @@ export class AuthService {
   }
 
   async changePassword(current_password: string, new_password: string): Promise<{ success: boolean }> {
-    return lastValueFrom(
+    return this.call(
       this.http.post<{ success: boolean }>(`${this.baseUrl}/change-password`, {
         current_password,
         new_password,
-      })
+      }),
     );
   }
 
   static errorMessage(err: unknown): string {
+    // RxJS timeout() throws a generic Error with name "TimeoutError"
+    if (err && typeof err === 'object' && 'name' in err && (err as { name?: string }).name === 'TimeoutError') {
+      return 'Backend is taking too long to respond. Please check that the server is running on http://localhost:5000.';
+    }
     if (err && typeof err === 'object' && 'error' in err) {
       const e = err as HttpErrorResponse;
       const body = e.error;
@@ -132,6 +155,9 @@ export class AuthService {
       if (body && typeof body === 'object' && Array.isArray((body as { errors?: { msg?: string }[] }).errors)) {
         const first = (body as { errors: { msg?: string }[] }).errors[0];
         if (first?.msg) return first.msg;
+      }
+      if (e.status === 0) {
+        return 'Cannot reach backend. Please ensure it is running on http://localhost:5000 and try again.';
       }
       return e.message || 'Request failed';
     }

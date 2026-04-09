@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
-import { lastValueFrom } from 'rxjs';
+import { Observable, catchError, lastValueFrom, throwError, timeout } from 'rxjs';
 
 import { environment } from '../../environments/environment';
 
@@ -68,26 +68,36 @@ export interface SavedClientApi {
 @Injectable({ providedIn: 'root' })
 export class WorkerService {
   private readonly baseUrl = `${environment.apiBaseUrl}/api/workers`;
+  private readonly requestTimeoutMs = 12000;
 
   constructor(private readonly http: HttpClient) {}
 
+  private async call<T>(obs: Observable<T>): Promise<T> {
+    return lastValueFrom(
+      obs.pipe(
+        timeout(this.requestTimeoutMs),
+        catchError((err) => throwError(() => err)),
+      ),
+    );
+  }
+
   async getStats(): Promise<WorkerStats> {
-    return lastValueFrom(this.http.get<WorkerStats>(`${this.baseUrl}/stats`));
+    return this.call(this.http.get<WorkerStats>(`${this.baseUrl}/stats`));
   }
 
   async getJobs(status: string): Promise<WorkerJob[]> {
     const params = new HttpParams().set('status', status);
-    return lastValueFrom(this.http.get<WorkerJob[]>(`${this.baseUrl}/jobs`, { params }));
+    return this.call(this.http.get<WorkerJob[]>(`${this.baseUrl}/jobs`, { params }));
   }
 
   async updateJobStatus(id: number, status: WorkerJobStatus): Promise<WorkerJob> {
-    return lastValueFrom(
+    return this.call(
       this.http.patch<WorkerJob>(`${this.baseUrl}/jobs/${id}/status`, { status })
     );
   }
 
   async saveClientFromJob(jobId: number): Promise<{ message: string; client?: unknown; alreadySaved?: boolean }> {
-    return lastValueFrom(
+    return this.call(
       this.http.post<{ message: string; client?: unknown; alreadySaved?: boolean }>(
         `${this.baseUrl}/jobs/${jobId}/save-client`,
         {}
@@ -96,15 +106,15 @@ export class WorkerService {
   }
 
   async getSavedClients(): Promise<SavedClientApi[]> {
-    return lastValueFrom(this.http.get<SavedClientApi[]>(`${this.baseUrl}/saved-clients`));
+    return this.call(this.http.get<SavedClientApi[]>(`${this.baseUrl}/saved-clients`));
   }
 
   async getMyProfile(): Promise<WorkerProfileApi> {
-    return lastValueFrom(this.http.get<WorkerProfileApi>(`${this.baseUrl}/me/profile`));
+    return this.call(this.http.get<WorkerProfileApi>(`${this.baseUrl}/me/profile`));
   }
 
   async getWorkerProfile(workerId: number): Promise<WorkerProfileApi> {
-    return lastValueFrom(this.http.get<WorkerProfileApi>(`${this.baseUrl}/${workerId}`));
+    return this.call(this.http.get<WorkerProfileApi>(`${this.baseUrl}/${workerId}`));
   }
 
   async updateMyProfile(payload: {
@@ -120,7 +130,7 @@ export class WorkerService {
     service_location?: string;
   }): Promise<WorkerProfileApi> {
     // Backend expects `PUT /api/workers/me/profile` with the worker profile fields.
-    return lastValueFrom(
+    return this.call(
       this.http.put<WorkerProfileApi>(`${this.baseUrl}/me/profile`, payload)
     );
   }
@@ -128,7 +138,7 @@ export class WorkerService {
   async uploadProfilePicture(file: File): Promise<{ profile_image: string; message: string }> {
     const form = new FormData();
     form.append('profile_picture', file);
-    return lastValueFrom(
+    return this.call(
       this.http.post<{ profile_image: string; message: string }>(
         `${this.baseUrl}/me/profile-picture`,
         form
@@ -137,8 +147,14 @@ export class WorkerService {
   }
 
   static errorMessage(err: unknown): string {
+    if (err && typeof err === 'object' && 'name' in err && (err as { name?: string }).name === 'TimeoutError') {
+      return 'Backend is taking too long to respond. Please check that the server is running on http://localhost:5000.';
+    }
     if (err && typeof err === 'object' && 'error' in err) {
       const e = err as HttpErrorResponse;
+      if (e.status === 0) {
+        return 'Cannot reach backend. Please ensure it is running on http://localhost:5000 and try again.';
+      }
       return (e.error?.message as string | undefined) || e.message || 'Request failed';
     }
     return err instanceof Error ? err.message : 'Request failed';

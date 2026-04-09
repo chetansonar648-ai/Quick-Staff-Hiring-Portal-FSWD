@@ -19,3 +19,10 @@ export function setSessionUser(user: unknown): void {
   localStorage.setItem('qs_user', json);
 }
 
+export function clearAuthSession(): void {
+  localStorage.removeItem('token');
+  localStorage.removeItem('qs_token');
+  localStorage.removeItem('user');
+  localStorage.removeItem('qs_user');
+}
+
