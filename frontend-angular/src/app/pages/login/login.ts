@@ -60,6 +60,7 @@ export class LoginComponent {
       } else {
         await this.router.navigate(['/worker/dashboard']);
       }
+      window.scrollTo(0, 0);
     } catch (err) {
       this.error = AuthService.errorMessage(err);
     } finally {

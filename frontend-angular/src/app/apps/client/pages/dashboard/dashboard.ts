@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { catchError, finalize, forkJoin, from, of } from 'rxjs';
 
 import { ClientService, type StaffCard } from '../../../../services/client.service';
 
@@ -12,7 +13,11 @@ import { ClientService, type StaffCard } from '../../../../services/client.servi
   templateUrl: './dashboard.html',
 })
 export class ClientDashboardComponent implements OnInit {
-  constructor(public router: Router, private readonly clientService: ClientService) {}
+  constructor(
+    public router: Router,
+    private readonly clientService: ClientService,
+    private readonly cdr: ChangeDetectorRef,
+  ) {}
 
   stats = { active: 0, completed: 0, pendingReviews: 0 };
 
@@ -22,22 +27,32 @@ export class ClientDashboardComponent implements OnInit {
   error: string | null = null;
   searchQuery = '';
 
-  async ngOnInit(): Promise<void> {
+  ngOnInit(): void {
     this.loading = true;
     this.error = null;
-    try {
-      const [stats, recommended] = await Promise.all([
-        this.clientService.getClientStats(),
-        this.clientService.getRecommendedStaff(4),
-      ]);
-      this.stats = stats;
-      this.recommendedStaff = recommended;
-    } catch (err) {
-      this.error = ClientService.errorMessage(err);
-      this.recommendedStaff = [];
-    } finally {
-      this.loading = false;
-    }
+    forkJoin({
+      stats: from(this.clientService.getClientStats()).pipe(catchError(() => of(this.stats))),
+      recommended: from(this.clientService.getRecommendedStaff(4)).pipe(catchError(() => of([] as StaffCard[]))),
+    })
+      .pipe(
+        finalize(() => {
+          this.loading = false;
+          this.cdr.detectChanges();
+        }),
+      )
+      .subscribe({
+        next: ({ stats, recommended }) => {
+          this.stats = stats;
+          this.recommendedStaff = recommended;
+          this.error = null;
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          this.error = ClientService.errorMessage(err);
+          this.recommendedStaff = [];
+          this.cdr.detectChanges();
+        },
+      });
   }
 
   handleCategoryClick(category: string): void {

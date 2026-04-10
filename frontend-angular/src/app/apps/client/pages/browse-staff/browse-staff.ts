@@ -1,8 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { Subscription, catchError, finalize, forkJoin, from, of } from 'rxjs';
 
 import { ClientService, type BrowseCategory, type StaffCard } from '../../../../services/client.service';
 
@@ -43,6 +43,7 @@ export class BrowseStaffComponent implements OnInit, OnDestroy {
     public router: Router,
     private route: ActivatedRoute,
     private readonly clientService: ClientService,
+    private readonly cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
@@ -53,7 +54,7 @@ export class BrowseStaffComponent implements OnInit, OnDestroy {
         category: params.get('category') || '',
       };
       this.showFilters = params.get('showFilters') === 'true';
-      void this.loadCategoriesAndStaff();
+      this.loadCategoriesAndStaff();
     });
   }
 
@@ -61,40 +62,68 @@ export class BrowseStaffComponent implements OnInit, OnDestroy {
     this.sub?.unsubscribe();
   }
 
-  private async loadCategoriesAndStaff(): Promise<void> {
+  private loadCategoriesAndStaff(): void {
     this.loading = true;
     this.error = null;
-    try {
-      if (this.categories.length === 0) {
-        this.categories = await this.clientService.getBrowseCategories();
-      }
-      this.staff = await this.clientService.getBrowseStaff(this.filters);
-    } catch (err) {
-      this.error = ClientService.errorMessage(err);
-      this.staff = [];
-    } finally {
-      this.loading = false;
-    }
+    const categories$ =
+      this.categories.length === 0
+        ? from(this.clientService.getBrowseCategories()).pipe(catchError(() => of([] as BrowseCategory[])))
+        : of(this.categories);
+
+    forkJoin({
+      categories: categories$,
+      staff: from(this.clientService.getBrowseStaff(this.filters)).pipe(catchError(() => of([] as StaffCard[]))),
+    })
+      .pipe(
+        finalize(() => {
+          this.loading = false;
+          this.cdr.detectChanges();
+        }),
+      )
+      .subscribe({
+        next: ({ categories, staff }) => {
+          this.categories = categories;
+          this.staff = staff;
+          this.error = null;
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          this.error = ClientService.errorMessage(err);
+          this.staff = [];
+          this.cdr.detectChanges();
+        },
+      });
   }
 
-  private async loadStaffOnly(): Promise<void> {
+  private loadStaffOnly(): void {
     this.loading = true;
     this.error = null;
-    try {
-      this.staff = await this.clientService.getBrowseStaff(this.filters);
-    } catch (err) {
-      this.error = ClientService.errorMessage(err);
-      this.staff = [];
-    } finally {
-      this.loading = false;
-    }
+    from(this.clientService.getBrowseStaff(this.filters))
+      .pipe(
+        finalize(() => {
+          this.loading = false;
+          this.cdr.detectChanges();
+        }),
+      )
+      .subscribe({
+        next: (staff) => {
+          this.staff = staff;
+          this.error = null;
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          this.error = ClientService.errorMessage(err);
+          this.staff = [];
+          this.cdr.detectChanges();
+        },
+      });
   }
 
   handleFilterChange(key: keyof BrowseStaffComponent['filters'], value: string): void {
     this.filters = { ...this.filters, [key]: value };
     if (this.filterFetchTimeout) clearTimeout(this.filterFetchTimeout);
     this.filterFetchTimeout = setTimeout(() => {
-      void this.loadStaffOnly();
+      this.loadStaffOnly();
     }, 300);
   }
 
@@ -152,7 +181,7 @@ export class BrowseStaffComponent implements OnInit, OnDestroy {
     this.filters = { search: '', location: '', category: '', min_price: '', max_price: '', min_rating: '' };
     if (this.filterFetchTimeout) clearTimeout(this.filterFetchTimeout);
     this.filterFetchTimeout = setTimeout(() => {
-      void this.loadStaffOnly();
+      this.loadStaffOnly();
     }, 300);
   }
 

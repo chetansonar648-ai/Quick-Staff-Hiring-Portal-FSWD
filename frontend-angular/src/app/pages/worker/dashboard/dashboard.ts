@@ -1,8 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
-import { Subscription, filter } from 'rxjs';
+import { Subscription, catchError, finalize, forkJoin, from, of, filter } from 'rxjs';
 
 import { WorkerService, type WorkerJob, type WorkerStats } from '../../../services/worker.service';
 
@@ -26,33 +26,20 @@ export class WorkerDashboardComponent implements OnInit, OnDestroy {
   constructor(
     private readonly router: Router,
     private readonly workerService: WorkerService,
+    private readonly cdr: ChangeDetectorRef,
   ) {}
 
-  /*async ngOnInit(): Promise<void> {
+  ngOnInit(): void {
     this.currentPath = this.router.url.split('?')[0];
+
     this.sub = this.router.events
       .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
       .subscribe((e) => {
         this.currentPath = e.urlAfterRedirects.split('?')[0];
       });
 
-    //void this.loadDashboardData();
-    await this.loadDashboardData();
-  }*/
- async ngOnInit(): Promise<void> {
-  this.currentPath = this.router.url.split('?')[0];
-
-  this.sub = this.router.events
-    .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
-    .subscribe(() => {
-      this.currentPath = this.router.url.split('?')[0];
-
-      // 🔥 THIS LINE FIXES YOUR ISSUE
-      this.loadDashboardData();
-    });
-
-  await this.loadDashboardData();
-}
+    this.loadDashboardData();
+  }
 
   ngOnDestroy(): void {
     this.sub?.unsubscribe();
@@ -81,33 +68,41 @@ export class WorkerDashboardComponent implements OnInit, OnDestroy {
     return this.activeTab === 'scheduled' ? this.schedule : this.history;
   }
 
-  private async loadDashboardData(): Promise<void> {
+  private loadDashboardData(): void {
     this.loading = true;
     this.error = null;
-    try {
-      const [stats, pendingJobs, activeJobs, historyJobs] = await Promise.all([
-        this.workerService.getStats(),
-        this.workerService.getJobs('pending'),
-        this.workerService.getJobs('active'),
-        this.workerService.getJobs('history'),
-      ]);
-
-      // "Scheduled" in UI includes pending + accepted/active jobs.
-      const combined = [...(pendingJobs || []), ...(activeJobs || [])];
-      this.schedule = combined.sort((a, b) => new Date(b.booking_date || '').getTime() - new Date(a.booking_date || '').getTime());
-      this.history = historyJobs || [];
-      this.stats = stats || this.stats;
-
-      // We reuse `getMyProfile` to show the user's name in the header.
-      const profile = await this.workerService.getMyProfile();
-      this.user = { name: profile?.name || '', profile_image: profile?.image_url };
-    } catch (err) {
-      this.error = WorkerService.errorMessage(err);
-      this.schedule = [];
-      this.history = [];
-    } finally {
-      this.loading = false;
-    }
+    forkJoin({
+      stats: from(this.workerService.getStats()).pipe(catchError(() => of(this.stats))),
+      pendingJobs: from(this.workerService.getJobs('pending')).pipe(catchError(() => of([] as WorkerJob[]))),
+      activeJobs: from(this.workerService.getJobs('active')).pipe(catchError(() => of([] as WorkerJob[]))),
+      historyJobs: from(this.workerService.getJobs('history')).pipe(catchError(() => of([] as WorkerJob[]))),
+      profile: from(this.workerService.getMyProfile()).pipe(catchError(() => of({ name: '', image_url: '' }))),
+    })
+      .pipe(
+        finalize(() => {
+          this.loading = false;
+          this.cdr.detectChanges();
+        }),
+      )
+      .subscribe({
+        next: ({ stats, pendingJobs, activeJobs, historyJobs, profile }) => {
+          const combined = [...pendingJobs, ...activeJobs];
+          this.schedule = combined.sort(
+            (a, b) => new Date(b.booking_date || '').getTime() - new Date(a.booking_date || '').getTime(),
+          );
+          this.history = historyJobs;
+          this.stats = stats || this.stats;
+          this.user = { name: profile?.name || '', profile_image: profile?.image_url };
+          this.error = null;
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          this.error = WorkerService.errorMessage(err);
+          this.schedule = [];
+          this.history = [];
+          this.cdr.detectChanges();
+        },
+      });
   }
 }
 
