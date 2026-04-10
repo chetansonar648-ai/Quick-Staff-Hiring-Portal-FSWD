@@ -61,6 +61,16 @@ export interface ClientBookingApi {
   cancellation_reason?: string;
 }
 
+export interface CreateBookingPayload {
+  worker_id: number;
+  service_id: number | null;
+  booking_date: string;
+  duration_hours: number;
+  total_price: number;
+  address: string;
+  special_instructions?: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ClientService {
   private readonly baseUrl = `${environment.apiBaseUrl}/api`;
@@ -139,6 +149,12 @@ export class ClientService {
       this.http.get<ClientBookingApi[]>(`${this.baseUrl}/bookings/client`),
     );
     return bookings || [];
+  }
+
+  async createBooking(payload: CreateBookingPayload): Promise<{ booking?: { id?: number }; booking_reference?: string }> {
+    return this.call(
+      this.http.post<{ booking?: { id?: number }; booking_reference?: string }>(`${this.baseUrl}/bookings`, payload),
+    );
   }
 
   async saveWorker(workerId: number): Promise<void> {

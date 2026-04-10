@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { Subscription, finalize, from } from 'rxjs';
 
 import { AuthService } from '../../../../services/auth.service';
@@ -47,7 +48,7 @@ const tabs = [
 @Component({
   selector: 'app-client-my-bookings',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './my-bookings.html',
 })
 export class MyBookingsComponent implements OnInit, OnDestroy {

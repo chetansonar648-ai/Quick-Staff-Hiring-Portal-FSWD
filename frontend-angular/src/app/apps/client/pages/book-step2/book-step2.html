@@ -1,0 +1,151 @@
+<main *ngIf="loading" class="flex-1 overflow-y-auto p-6 md:p-8 flex items-center justify-center">
+  <div class="flex flex-col items-center gap-4">
+    <div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+    <p class="text-gray-500 font-medium">Loading details...</p>
+  </div>
+</main>
+
+<main *ngIf="!loading && worker" class="flex-1 overflow-y-auto p-6 md:p-8">
+  <div class="max-w-4xl mx-auto">
+    <div class="bg-white dark:bg-gray-900/50 p-6 rounded-xl border border-gray-200 dark:border-gray-800 flex items-start sm:items-center gap-4 mb-8">
+      <img
+        [alt]="worker.name || 'Worker'"
+        class="size-16 rounded-full object-cover border-2 border-white dark:border-gray-800"
+        [src]="worker.image_url || defaultWorkerAvatar"
+        (error)="onWorkerImageError($event)"
+      />
+      <div class="flex-grow">
+        <p class="text-sm text-gray-500 dark:text-gray-400">You are booking:</p>
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ worker.name }}</h2>
+        <p class="text-primary font-medium">{{ worker.role }}</p>
+      </div>
+      <div class="text-sm text-gray-600 dark:text-gray-300 text-right space-y-1 flex-shrink-0">
+        <div class="flex items-center justify-end gap-2">
+          <span class="material-symbols-outlined text-base">calendar_today</span>
+          <p>{{ displayDate }}</p>
+        </div>
+        <div class="flex items-center justify-end gap-2">
+          <span class="material-symbols-outlined text-base">schedule</span>
+          <p>{{ time }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+      <div class="md:col-span-1">
+        <nav>
+          <ul class="space-y-4">
+            <li>
+              <div class="flex items-center gap-3">
+                <div class="flex items-center justify-center size-8 rounded-full bg-primary/20 dark:bg-primary/30 text-primary font-bold">
+                  <span class="material-symbols-outlined">check</span>
+                </div>
+                <div>
+                  <h3 class="font-semibold text-gray-600 dark:text-gray-300">Service & Time</h3>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">Completed</p>
+                </div>
+              </div>
+            </li>
+            <li><div class="h-6 w-px bg-gray-200 dark:bg-gray-700 ml-4"></div></li>
+            <li>
+              <div class="flex items-center gap-3">
+                <div class="flex items-center justify-center size-8 rounded-full bg-primary text-white font-bold">2</div>
+                <div>
+                  <h3 class="font-bold text-primary">Details</h3>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">Location and instructions</p>
+                </div>
+              </div>
+            </li>
+            <li><div class="h-6 w-px bg-gray-200 dark:bg-gray-700 ml-4"></div></li>
+            <li>
+              <div class="flex items-center gap-3">
+                <div class="flex items-center justify-center size-8 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 font-bold">3</div>
+                <div>
+                  <h3 class="font-semibold text-gray-600 dark:text-gray-300">Confirm & Pay</h3>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">Review and finalize</p>
+                </div>
+              </div>
+            </li>
+          </ul>
+        </nav>
+      </div>
+
+      <div class="md:col-span-3">
+        <div class="bg-white dark:bg-gray-900/50 p-6 rounded-xl border border-gray-200 dark:border-gray-800 space-y-6">
+          <div>
+            <h3 class="text-xl font-bold mb-4 text-gray-900 dark:text-white">Service Location</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="sm:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" for="address-search">Search for Address</label>
+                <div class="relative">
+                  <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">search</span>
+                  <input
+                    class="w-full pl-10 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:ring-primary focus:border-primary"
+                    id="address-search"
+                    placeholder="E.g., 123 Main St, Anytown, USA"
+                    type="text"
+                    name="location"
+                    [(ngModel)]="formData.location"
+                  />
+                </div>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" for="saved-address">Or Use a Saved Address</label>
+                <select class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:ring-primary focus:border-primary" id="saved-address">
+                  <option>No saved addresses</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="text-xl font-bold mb-4 text-gray-900 dark:text-white">Service Details</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="sm:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" for="instructions">Instructions for Worker</label>
+                <textarea
+                  class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:ring-primary focus:border-primary"
+                  id="instructions"
+                  placeholder="E.g., Please use the back entrance for deliveries. Report to the event manager, Susan, upon arrival."
+                  rows="4"
+                  name="instructions"
+                  [(ngModel)]="formData.instructions"
+                ></textarea>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" for="duration">Estimated Duration (hours)</label>
+                <select
+                  class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:ring-primary focus:border-primary"
+                  id="duration"
+                  name="duration"
+                  [(ngModel)]="formData.duration"
+                >
+                  <option value="1">1 hour</option>
+                  <option value="2">2 hours</option>
+                  <option value="3">3 hours</option>
+                  <option value="4">4 hours</option>
+                  <option value="5">5 hours</option>
+                  <option value="6">6 hours</option>
+                  <option value="7">7 hours</option>
+                  <option value="8">8 hours</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-between mt-8">
+            <button type="button" (click)="goBack()" class="flex items-center justify-center gap-2 px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 font-bold rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+              <span class="material-symbols-outlined">arrow_back</span>
+              <span>Back</span>
+            </button>
+            <button type="button" (click)="handleNext()" class="flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white font-bold rounded-lg hover:bg-primary/90 transition-colors">
+              <span>Next</span>
+              <span class="material-symbols-outlined">arrow_forward</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+

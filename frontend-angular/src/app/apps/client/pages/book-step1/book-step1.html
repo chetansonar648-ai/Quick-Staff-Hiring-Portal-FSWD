@@ -1,0 +1,161 @@
+<main *ngIf="loading" class="flex-1 overflow-y-auto p-6 md:p-8 flex items-center justify-center">
+  <div class="flex flex-col items-center gap-4">
+    <div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+    <p class="text-gray-500 font-medium">Loading booking...</p>
+  </div>
+</main>
+
+<main *ngIf="!loading && !workerId" class="flex-1 overflow-y-auto p-6 md:p-8">
+  <div class="max-w-4xl mx-auto space-y-8">
+    <div class="text-center space-y-4">
+      <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Start New Booking</h1>
+      <p class="text-gray-500 dark:text-gray-400 text-lg">Select a service to find the perfect professional</p>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+      <button
+        *ngFor="let cat of categories"
+        type="button"
+        (click)="goToCategory(cat.category)"
+        class="group flex flex-col items-center justify-center p-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-primary hover:shadow-lg transition-all"
+      >
+        <div class="size-16 rounded-full bg-primary/10 text-primary flex items-center justify-center mb-4 group-hover:bg-primary group-hover:text-white transition-colors">
+          <span class="material-symbols-outlined text-3xl">category</span>
+        </div>
+        <h3 class="font-bold text-gray-900 dark:text-white text-lg">{{ cat.category }}</h3>
+        <p class="text-sm text-gray-500 mt-1">{{ cat.count }} Professionals</p>
+      </button>
+    </div>
+
+    <div class="flex justify-center mt-8">
+      <button type="button" (click)="router.navigate(['/client/browse-staff'])" class="text-primary font-bold hover:underline">
+        Browse all professionals
+      </button>
+    </div>
+  </div>
+</main>
+
+<div *ngIf="!loading && workerId && !worker" class="text-center py-12 text-red-500">
+  {{ error || 'Worker not found.' }}
+</div>
+
+<main *ngIf="!loading && workerId && worker" class="flex-1 overflow-y-auto p-6 md:p-8">
+  <div class="max-w-4xl mx-auto">
+    <div class="bg-white dark:bg-gray-900/50 p-6 rounded-xl border border-gray-200 dark:border-gray-800 flex items-center gap-4 mb-8">
+      <img
+        [alt]="worker.name || 'Worker'"
+        class="size-16 rounded-full object-cover border-2 border-white dark:border-gray-800"
+        [src]="worker.image_url || defaultWorkerAvatar"
+        (error)="onWorkerImageError($event)"
+      />
+      <div class="flex-1">
+        <p class="text-sm text-gray-500 dark:text-gray-400">You are booking:</p>
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ worker.name }}</h2>
+        <p class="text-primary font-medium">{{ worker.role }}</p>
+      </div>
+      <div class="text-right">
+        <p class="text-sm text-gray-500 dark:text-gray-400">Hourly Rate</p>
+        <p class="text-2xl font-bold text-primary">${{ worker.hourly_rate || 25 }}/hr</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+      <div class="md:col-span-1">
+        <nav>
+          <ul class="space-y-4">
+            <li>
+              <div class="flex items-center gap-3">
+                <div class="flex items-center justify-center size-8 rounded-full bg-primary text-white font-bold">1</div>
+                <div>
+                  <h3 class="font-bold text-primary">Date & Time</h3>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">Select when you need service</p>
+                </div>
+              </div>
+            </li>
+            <li><div class="h-6 w-px bg-gray-200 dark:bg-gray-700 ml-4"></div></li>
+            <li>
+              <div class="flex items-center gap-3">
+                <div class="flex items-center justify-center size-8 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 font-bold">2</div>
+                <div>
+                  <h3 class="font-semibold text-gray-600 dark:text-gray-300">Details</h3>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">Location and instructions</p>
+                </div>
+              </div>
+            </li>
+            <li><div class="h-6 w-px bg-gray-200 dark:bg-gray-700 ml-4"></div></li>
+            <li>
+              <div class="flex items-center gap-3">
+                <div class="flex items-center justify-center size-8 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 font-bold">3</div>
+                <div>
+                  <h3 class="font-semibold text-gray-600 dark:text-gray-300">Confirm & Pay</h3>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">Review and finalize</p>
+                </div>
+              </div>
+            </li>
+          </ul>
+        </nav>
+      </div>
+
+      <div class="md:col-span-3 space-y-8">
+        <div class="bg-white dark:bg-gray-900/50 p-6 rounded-xl border border-gray-200 dark:border-gray-800">
+          <h3 class="text-xl font-bold mb-4 text-gray-900 dark:text-white">Select Date & Time</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <div class="flex items-center justify-between mb-4">
+                <button type="button" (click)="monthOffset = monthOffset - 1" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
+                  <span class="material-symbols-outlined">chevron_left</span>
+                </button>
+                <p class="font-semibold">{{ monthLabel }}</p>
+                <button type="button" (click)="monthOffset = monthOffset + 1" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
+                  <span class="material-symbols-outlined">chevron_right</span>
+                </button>
+              </div>
+              <div class="grid grid-cols-7 text-center text-sm text-gray-500 dark:text-gray-400">
+                <div class="font-medium h-8">Su</div><div class="font-medium h-8">Mo</div><div class="font-medium h-8">Tu</div><div class="font-medium h-8">We</div><div class="font-medium h-8">Th</div><div class="font-medium h-8">Fr</div><div class="font-medium h-8">Sa</div>
+                <div *ngFor="let i of calendarCells; let idx = index" class="h-8">
+                  <button
+                    *ngIf="isDate(idx)"
+                    type="button"
+                    (click)="selectDate(idx)"
+                    [disabled]="isPast(idx)"
+                    [ngClass]="isPast(idx)
+                      ? 'size-8 rounded-full flex items-center justify-center transition-colors text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                      : (selectedDate === getDateStr(idx)
+                        ? 'size-8 rounded-full flex items-center justify-center transition-colors bg-primary text-white font-bold'
+                        : 'size-8 rounded-full flex items-center justify-center transition-colors hover:bg-primary/20')"
+                  >
+                    {{ getDay(idx) }}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <p class="font-semibold mb-4 text-center">Available Timeslots</p>
+              <div class="grid grid-cols-2 gap-3">
+                <button
+                  *ngFor="let t of ['09:00 AM','10:00 AM','11:00 AM','01:00 PM','02:00 PM','03:00 PM','04:00 PM','05:00 PM']"
+                  type="button"
+                  (click)="selectedTimeSlot = t"
+                  [ngClass]="selectedTimeSlot === t
+                    ? 'px-4 py-2 border rounded-md text-center transition-all border-primary bg-primary/10 text-primary font-semibold'
+                    : 'px-4 py-2 border rounded-md text-center transition-all border-gray-300 dark:border-gray-600 hover:border-primary hover:bg-primary/5'"
+                >
+                  {{ t }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-end mt-8">
+          <button type="button" (click)="handleNext()" class="flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white font-bold rounded-lg hover:bg-primary/90 transition-colors">
+            <span>Continue to Details</span>
+            <span class="material-symbols-outlined">arrow_forward</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+

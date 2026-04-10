@@ -64,6 +64,10 @@ export const routes: Routes = [
     children: [
       { path: '', loadComponent: () => import('./apps/client/pages/dashboard/dashboard').then((m) => m.ClientDashboardComponent) },
       { path: 'browse-staff', loadComponent: () => import('./apps/client/pages/browse-staff/browse-staff').then((m) => m.BrowseStaffComponent) },
+      { path: 'book/step-1', loadComponent: () => import('./apps/client/pages/book-step1/book-step1').then((m) => m.BookStep1Component) },
+      { path: 'book/step-2', loadComponent: () => import('./apps/client/pages/book-step2/book-step2').then((m) => m.BookStep2Component) },
+      { path: 'book/step-3', loadComponent: () => import('./apps/client/pages/book-step3/book-step3').then((m) => m.BookStep3Component) },
+      { path: 'book/confirm', loadComponent: () => import('./apps/client/pages/book-confirm/book-confirm').then((m) => m.BookConfirmComponent) },
       { path: 'bookings', loadComponent: () => import('./apps/client/pages/my-bookings/my-bookings').then((m) => m.MyBookingsComponent) },
       { path: 'saved-workers', loadComponent: () => import('./apps/client/pages/saved-workers/saved-workers').then((m) => m.SavedWorkersComponent) },
       { path: 'profile', loadComponent: () => import('./apps/client/pages/profile/profile').then((m) => m.ClientProfileComponent) },

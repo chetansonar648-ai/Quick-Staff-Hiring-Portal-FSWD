@@ -3,7 +3,7 @@
     <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Manage Your Bookings</h2>
     <button
       type="button"
-      (click)="router.navigate(['/client/book/step-1'])"
+      [routerLink]="'/client/book/step-1'"
       class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-5 bg-primary text-white text-sm font-bold shadow-sm hover:bg-primary/90 transition-colors gap-2"
     >
       <span class="material-symbols-outlined !text-xl">add</span>
