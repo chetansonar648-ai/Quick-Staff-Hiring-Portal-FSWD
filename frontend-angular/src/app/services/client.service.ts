@@ -35,6 +35,32 @@ export interface ClientProfileApi {
   profile_image?: string;
 }
 
+export interface ClientBookingApi {
+  id: number;
+  worker_id?: number;
+  service_id?: number;
+  worker_name?: string;
+  worker_role?: string;
+  worker_image?: string;
+  worker_rating?: number;
+  service_type?: string;
+  service_description?: string;
+  status?: string;
+  booking_date?: string;
+  start_time?: string;
+  end_time?: string;
+  duration_hours?: number;
+  location_address?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zip_code?: string;
+  booking_reference?: string;
+  cancelled_at?: string;
+  cancelled_by?: string;
+  cancellation_reason?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ClientService {
   private readonly baseUrl = `${environment.apiBaseUrl}/api`;
@@ -106,6 +132,13 @@ export class ClientService {
       this.http.get<any[]>(`${this.baseUrl}/workers`, { params })
     );
     return (workers || []).map((w) => this.mapWorkerToStaffCard(w, true));
+  }
+
+  async getClientBookings(): Promise<ClientBookingApi[]> {
+    const bookings = await this.call(
+      this.http.get<ClientBookingApi[]>(`${this.baseUrl}/bookings/client`),
+    );
+    return bookings || [];
   }
 
   async saveWorker(workerId: number): Promise<void> {

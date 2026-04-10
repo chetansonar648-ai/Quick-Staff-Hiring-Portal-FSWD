@@ -21,8 +21,10 @@ router.post('/', authenticate(['client']), validateBooking, createBooking);
 router.get('/client', authenticate(['client']), listBookings);
 router.get('/worker', authenticate(['worker']), listBookings);
 
-// Get bookings by client ID (for workers viewing client profile)
-router.get('/client/:clientId', authenticate(['worker']), getBookingsByClientId);
+// Worker-only client booking history lookup by explicit client id.
+router.get('/client/history/:clientId', authenticate(['worker']), getBookingsByClientId);
+
+
 
 // Reschedule booking (clients only)
 router.patch('/:bookingId/reschedule', authenticate(['client']), rescheduleBooking);

@@ -1,8 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { Subscription, finalize, from } from 'rxjs';
+
+import { AuthService } from '../../../../services/auth.service';
+import { ClientBookingApi, ClientService } from '../../../../services/client.service';
 
 type ToastType = 'success' | 'error' | 'info' | 'warning';
 
@@ -55,6 +58,7 @@ export class MyBookingsComponent implements OnInit, OnDestroy {
 
   bookings: Record<string, Booking[]> = {};
   loading = false;
+  error: string | null = null;
 
   toasts: Array<{ id: number; message: string; type: ToastType }> = [];
 
@@ -111,10 +115,13 @@ export class MyBookingsComponent implements OnInit, OnDestroy {
   constructor(
     private route: ActivatedRoute,
     public router: Router,
+    private readonly authService: AuthService,
+    private readonly clientService: ClientService,
+    private readonly cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
-    this.seedMockBookings();
+    this.loadBookings();
     this.sub = this.route.queryParamMap.subscribe((params) => {
       this.activeTab = params.get('tab') || 'upcoming';
     });
@@ -139,89 +146,69 @@ export class MyBookingsComponent implements OnInit, OnDestroy {
     this.toasts = this.toasts.filter((t) => t.id !== id);
   }
 
-  seedMockBookings(): void {
-    const base: Booking[] = [
-      {
-        id: 1001,
-        worker_id: 101,
-        service_id: 501,
-        worker_name: 'Ava Johnson',
-        worker_role: 'Cleaner',
-        worker_image: this.defaultWorkerAvatar,
-        service_type: 'Cleaning',
-        service_description: 'Deep clean',
-        status: 'pending',
-        booking_date: '2026-03-30',
-        start_time: '09:00',
-        end_time: '12:00',
-        duration_hours: 3,
-        location_address: '123 Main St',
-        city: 'San Francisco',
-        state: 'CA',
-        zip_code: '94105',
-      },
-      {
-        id: 1002,
-        worker_id: 102,
-        service_id: 502,
-        worker_name: 'Noah Smith',
-        worker_role: 'Plumber',
-        worker_image: this.defaultWorkerAvatar,
-        service_type: 'Plumbing',
-        service_description: 'Leak repair',
-        status: 'in_progress',
-        booking_date: '2026-03-26',
-        start_time: '14:00',
-        end_time: '16:00',
-        duration_hours: 2,
-        location_address: '55 Market St',
-        city: 'San Francisco',
-        state: 'CA',
-        zip_code: '94105',
-      },
-      {
-        id: 1003,
-        worker_id: 103,
-        service_id: 503,
-        worker_name: 'Mia Chen',
-        worker_role: 'Electrician',
-        worker_image: this.defaultWorkerAvatar,
-        service_type: 'Electrical',
-        service_description: 'Outlet install',
-        status: 'completed',
-        booking_date: '2026-03-10',
-        start_time: '10:00',
-        end_time: '11:30',
-        duration_hours: 2,
-        location_address: '8 King St',
-        city: 'San Francisco',
-        state: 'CA',
-        zip_code: '94107',
-      },
-      {
-        id: 1004,
-        worker_id: 104,
-        service_id: 504,
-        worker_name: 'Liam Patel',
-        worker_role: 'Handyman',
-        worker_image: this.defaultWorkerAvatar,
-        service_type: 'Handyman',
-        service_description: 'Furniture assembly',
-        status: 'cancelled',
-        booking_date: '2026-03-12',
-        start_time: '13:00',
-        location_address: '200 Howard St',
-        city: 'San Francisco',
-        state: 'CA',
-        zip_code: '94105',
-        cancelled_at: '2026-03-11',
-        cancelled_by: 'client',
-        cancellation_reason: 'Schedule conflict',
-        worker_rating: 4.6,
-      },
-    ];
+  private loadBookings(): void {
+    const user = this.authService.getCurrentUser();
+    if (!user?.id) {
+      this.error = 'Unable to find logged-in client session. Please login again.';
+      this.bookings = this.emptyBookings();
+      this.cdr.detectChanges();
+      return;
+    }
 
-    this.bookings = {
+    this.loading = true;
+    this.error = null;
+
+    from(this.clientService.getClientBookings())
+      .pipe(
+        finalize(() => {
+          this.loading = false;
+          this.cdr.detectChanges();
+        }),
+      )
+      .subscribe({
+        next: (rows) => {
+          const mapped = (rows || []).map((b) => this.mapApiBooking(b));
+          this.bookings = this.groupBookings(mapped);
+          this.error = null;
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          this.error = ClientService.errorMessage(err);
+          this.bookings = this.emptyBookings();
+          this.cdr.detectChanges();
+        },
+      });
+  }
+
+  private mapApiBooking(b: ClientBookingApi): Booking {
+    return {
+      id: Number(b.id ?? 0),
+      worker_id: b.worker_id,
+      service_id: b.service_id,
+      worker_name: b.worker_name || 'Worker',
+      worker_role: b.worker_role || '',
+      worker_image: b.worker_image || this.defaultWorkerAvatar,
+      worker_rating: Number(b.worker_rating ?? 0),
+      service_type: b.service_type || 'General Service',
+      service_description: b.service_description || '',
+      status: b.status || 'pending',
+      booking_date: b.booking_date || '',
+      start_time: b.start_time || '',
+      end_time: b.end_time || '',
+      duration_hours: b.duration_hours,
+      location_address: b.location_address || b.address || '',
+      city: b.city || '',
+      state: b.state || '',
+      zip_code: b.zip_code || '',
+      booking_reference: b.booking_reference || `BK-${b.id ?? ''}`,
+      cancelled_at: b.cancelled_at || '',
+      cancelled_by: b.cancelled_by || '',
+      cancellation_reason: b.cancellation_reason || '',
+    };
+  }
+
+  private groupBookings(base: Booking[]): Record<string, Booking[]> {
+    return {
       upcoming: base.filter((b) => ['pending', 'accepted'].includes(b.status) || b.booking_date >= this.today()),
       active: base.filter((b) => b.status === 'in_progress'),
       requested: base.filter((b) => b.status === 'pending' || b.status === 'reviewing'),
@@ -229,6 +216,18 @@ export class MyBookingsComponent implements OnInit, OnDestroy {
       completed: base.filter((b) => b.status === 'completed'),
       cancelled: base.filter((b) => b.status === 'cancelled'),
       pendingReviews: base.filter((b) => b.status === 'completed'),
+    };
+  }
+
+  private emptyBookings(): Record<string, Booking[]> {
+    return {
+      upcoming: [],
+      active: [],
+      requested: [],
+      past: [],
+      completed: [],
+      cancelled: [],
+      pendingReviews: [],
     };
   }
 

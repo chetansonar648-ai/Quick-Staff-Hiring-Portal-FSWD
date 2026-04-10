@@ -33,6 +33,10 @@
     </nav>
   </div>
 
+  <div *ngIf="!loading && error" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
+    {{ error }}
+  </div>
+
   <!-- Upcoming -->
   <div *ngIf="activeTab === 'upcoming'">
     <div *ngIf="loading" class="text-center py-12 text-gray-500">Loading upcoming bookings...</div>
