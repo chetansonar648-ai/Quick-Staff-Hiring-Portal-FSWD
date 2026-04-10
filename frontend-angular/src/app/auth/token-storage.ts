@@ -17,6 +17,12 @@ export function setSessionUser(user: unknown): void {
   const json = JSON.stringify(user);
   localStorage.setItem('user', json);
   localStorage.setItem('qs_user', json);
+  if (user && typeof user === 'object' && user !== null && 'role' in user) {
+    const r = (user as { role?: unknown }).role;
+    if (typeof r === 'string' && r.length > 0) {
+      localStorage.setItem('role', r);
+    }
+  }
 }
 
 export function clearAuthSession(): void {
@@ -24,5 +30,6 @@ export function clearAuthSession(): void {
   localStorage.removeItem('qs_token');
   localStorage.removeItem('user');
   localStorage.removeItem('qs_user');
+  localStorage.removeItem('role');
 }
 

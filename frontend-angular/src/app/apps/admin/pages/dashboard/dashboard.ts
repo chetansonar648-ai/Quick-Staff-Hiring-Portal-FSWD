@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+
+import { AdminService, AdminDashboardStats, AdminRecentActivity } from '../../../../services/admin.service';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -8,20 +10,43 @@ import { Router } from '@angular/router';
   imports: [CommonModule],
   templateUrl: './dashboard.html',
 })
-export class AdminDashboardComponent {
-  constructor(public router: Router) {}
+export class AdminDashboardComponent implements OnInit {
+  stats: AdminDashboardStats = {
+    totalUsers: 0,
+    totalWorkers: 0,
+    totalClients: 0,
+    totalBookings: 0,
+  };
 
-  stats = [
-    { label: 'Total Users', value: '0', change: '+0%', icon: '👥', color: '#3b82f6' },
-    { label: 'Total Workers', value: '0', change: '+0%', icon: '🧑‍🔧', color: '#10b981' },
-    { label: 'Total Clients', value: '0', change: '+0%', icon: '🛒', color: '#f59e0b' },
-    { label: 'Total Bookings', value: '0', change: '+0%', icon: '📈', color: '#8b5cf6' },
-  ];
+  activities: AdminRecentActivity[] = [];
 
-  recentActivities: Array<{ user: string; action: string; time: string }> = [
-    { user: 'Client ID 1', action: 'Booked Service ID 1', time: new Date().toLocaleString() },
-    { user: 'Client ID 2', action: 'Booked Service ID 2', time: new Date().toLocaleString() },
-  ];
+  constructor(
+    public router: Router,
+    private adminService: AdminService,
+    private cdr: ChangeDetectorRef,
+  ) {}
+
+  ngOnInit(): void {
+    this.loadDashboard();
+  }
+
+  loadDashboard(): void {
+    this.adminService.getDashboardStats().subscribe({
+      next: (res) => {
+        this.stats = res;
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error(err),
+    });
+
+    this.adminService.getRecentActivity().subscribe({
+      next: (res) => {
+        this.activities = res;
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error(err),
+    });
+  }
 
   handleAddUser(): void {
     this.router.navigate(['/admin/clients']);
@@ -36,7 +61,6 @@ export class AdminDashboardComponent {
   }
 
   handleSendNotification(): void {
-    // Mock action: no API wired yet.
+    // Not wired to a backend yet.
   }
 }
-

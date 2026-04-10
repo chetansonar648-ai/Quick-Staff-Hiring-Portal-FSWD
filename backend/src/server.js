@@ -59,11 +59,10 @@ app.use(morgan('dev'));
 // Health check
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
-// Admin routes
-app.use('/', adminApiRoutes);
-
-// API routes
+// Public auth first — must run before admin router mounted at '/'
+// (adminApi applies authenticate(['admin']) to every path if registered first).
 app.use('/api/auth', authRoutes);
+
 app.use('/api/worker-profiles', workerProfileRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/worker-services', workerServiceRoutes);
@@ -75,6 +74,9 @@ app.use('/api/workers', workerRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/client', clientProfileRoutes);
+
+// Admin routes (JWT + role admin)
+app.use('/', adminApiRoutes);
 
 // Error handler (must be last)
 app.use(errorHandler);

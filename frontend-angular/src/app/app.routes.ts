@@ -78,6 +78,7 @@ export const routes: Routes = [
     path: 'admin',
     component: AdminLayoutComponent,
     canActivate: [AuthGuard],
+    data: { roles: ['admin'] },
     children: [
       { path: '', loadComponent: () => import('./apps/admin/pages/dashboard/dashboard').then((m) => m.AdminDashboardComponent) },
       { path: 'dashboard', loadComponent: () => import('./apps/admin/pages/dashboard/dashboard').then((m) => m.AdminDashboardComponent) },

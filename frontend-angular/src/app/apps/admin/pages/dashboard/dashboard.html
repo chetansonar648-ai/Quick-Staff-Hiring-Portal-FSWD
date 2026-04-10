@@ -5,14 +5,32 @@
   </div>
 
   <div class="stats-grid">
-    <div *ngFor="let stat of stats; let index = index" class="stat-card">
-      <div class="stat-icon" [style.background]="stat.color + '20'" [style.color]="stat.color">
-        {{ stat.icon }}
-      </div>
+    <div class="stat-card">
+      <div class="stat-icon" [style.background]="'#3b82f620'" [style.color]="'#3b82f6'">👥</div>
       <div class="stat-content">
-        <p class="stat-label">{{ stat.label }}</p>
-        <h3 class="stat-value">{{ stat.value }}</h3>
-        <span class="stat-change positive">{{ stat.change }}</span>
+        <p class="stat-label">Total Users</p>
+        <h3 class="stat-value">{{ stats.totalUsers }}</h3>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" [style.background]="'#10b98120'" [style.color]="'#10b981'">🧑‍🔧</div>
+      <div class="stat-content">
+        <p class="stat-label">Total Workers</p>
+        <h3 class="stat-value">{{ stats.totalWorkers }}</h3>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" [style.background]="'#f59e0b20'" [style.color]="'#f59e0b'">🛒</div>
+      <div class="stat-content">
+        <p class="stat-label">Total Clients</p>
+        <h3 class="stat-value">{{ stats.totalClients }}</h3>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" [style.background]="'#8b5cf620'" [style.color]="'#8b5cf6'">📈</div>
+      <div class="stat-content">
+        <p class="stat-label">Total Bookings</p>
+        <h3 class="stat-value">{{ stats.totalBookings }}</h3>
       </div>
     </div>
   </div>
@@ -21,8 +39,8 @@
     <div class="dashboard-card">
       <h3>Recent Activity</h3>
       <div class="activity-list">
-        <ng-container *ngIf="recentActivities.length > 0; else noActivity">
-          <div *ngFor="let activity of recentActivities; let index = index" class="activity-item">
+        <ng-container *ngIf="activities.length > 0; else noActivity">
+          <div *ngFor="let activity of activities; let index = index" class="activity-item">
             <div class="activity-avatar">
               {{ activity.user && activity.user.charAt(0) ? activity.user.charAt(0) : '?' }}
             </div>
@@ -51,4 +69,3 @@
     </div>
   </div>
 </div>
-

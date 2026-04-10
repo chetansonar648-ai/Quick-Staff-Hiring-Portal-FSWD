@@ -98,21 +98,33 @@ export const register = async (req, res) => {
 };
 
 export const login = async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ success: false, message: 'Email and password are required' });
-  }
-  if (!isValidEmail(email)) {
-    return res.status(400).json({ success: false, message: 'Invalid email format' });
+  const { email, username, password } = req.body;
+  const identifier = String(email || username || '').trim();
+  if (!identifier || !password) {
+    return res.status(400).json({ success: false, message: 'Email (or username) and password are required' });
   }
   if (password.length < 6) {
     return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' });
   }
 
-  const existing = await query('SELECT * FROM users WHERE email = $1', [email]);
+  let existing;
+  if (isValidEmail(identifier)) {
+    existing = await query('SELECT * FROM users WHERE LOWER(email) = LOWER($1)', [identifier]);
+  } else {
+    existing = await query(
+      `SELECT * FROM users WHERE LOWER(email) = LOWER($1) OR LOWER(name) = LOWER($1)`,
+      [identifier],
+    );
+    if (existing.rows.length > 1) {
+      return res.status(400).json({
+        success: false,
+        message: 'Multiple accounts matched this username. Please sign in with your email.',
+      });
+    }
+  }
   const user = existing.rows[0];
   if (process.env.NODE_ENV !== 'production') {
-    console.log('Login attempt:', { email, found: Boolean(user) });
+    console.log('Login attempt:', { identifier, found: Boolean(user) });
   }
 
   if (!user) {
@@ -129,23 +141,28 @@ export const login = async (req, res) => {
 
   const token = signToken({ id: user.id, role: user.role, email: user.email });
   res.cookie('token', token, { httpOnly: true, sameSite: 'lax' });
+
+  const userPayload = {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    phone: user.phone,
+    address: user.address,
+    profile_image: user.profile_image,
+    full_name: user.name,
+    user_type: user.role,
+    profile_image_url: user.profile_image,
+    last_login: lastLogin,
+  };
+
   return res.json({
     success: true,
     message: 'Login successful',
+    token,
+    user: { id: user.id, role: user.role, email: user.email },
     data: {
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        phone: user.phone,
-        address: user.address,
-        profile_image: user.profile_image,
-        full_name: user.name,
-        user_type: user.role,
-        profile_image_url: user.profile_image,
-        last_login: lastLogin,
-      },
+      user: userPayload,
       token,
     },
   });

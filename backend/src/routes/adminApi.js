@@ -1,23 +1,59 @@
 import { Router } from 'express';
 import pool from '../config/db.js';
+import { authenticate } from '../middleware/auth.js';
 
 const router = Router();
 
-// ============ ADMIN SUMMARY (Dashboard Stats) ============
-router.get('/admin/summary', async (req, res) => {
+// All admin panel APIs require a valid JWT and role = admin
+router.use(authenticate(['admin']));
+
+// ============ ADMIN DASHBOARD ============
+router.get('/api/admin/stats', async (req, res) => {
     try {
         const [users, workers, clients, bookings] = await Promise.all([
-            pool.query("SELECT COUNT(*) FROM users"),
-            pool.query("SELECT COUNT(*) FROM users WHERE role = 'worker'"),
-            pool.query("SELECT COUNT(*) FROM users WHERE role = 'client'"),
-            pool.query("SELECT COUNT(*) FROM bookings")
+            pool.query('SELECT COUNT(*)::int AS count FROM users'),
+            pool.query("SELECT COUNT(*)::int AS count FROM users WHERE role = 'worker'"),
+            pool.query("SELECT COUNT(*)::int AS count FROM users WHERE role = 'client'"),
+            pool.query('SELECT COUNT(*)::int AS count FROM bookings'),
         ]);
         res.json({
-            total_users: users.rows[0].count,
-            total_workers: workers.rows[0].count,
-            total_clients: clients.rows[0].count,
-            total_bookings: bookings.rows[0].count
+            totalUsers: users.rows[0].count,
+            totalWorkers: workers.rows[0].count,
+            totalClients: clients.rows[0].count,
+            totalBookings: bookings.rows[0].count,
         });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+router.get('/api/admin/recent-activity', async (req, res) => {
+    try {
+        const result = await pool.query(`
+      SELECT
+        c.name AS client_name,
+        w.name AS worker_name,
+        s.name AS service_name,
+        b.status,
+        COALESCE(b.created_at, b.booking_date) AS at
+      FROM bookings b
+      LEFT JOIN users c ON b.client_id = c.id
+      LEFT JOIN users w ON b.worker_id = w.id
+      LEFT JOIN services s ON b.service_id = s.id
+      ORDER BY COALESCE(b.created_at, b.booking_date) DESC NULLS LAST
+      LIMIT 25
+    `);
+        const activities = result.rows.map((row) => {
+            const service = row.service_name || 'a service';
+            const worker = row.worker_name ? ` with ${row.worker_name}` : '';
+            const status = row.status || 'pending';
+            return {
+                user: row.client_name || 'Client',
+                action: `booked ${service}${worker} (${status})`,
+                time: row.at ? new Date(row.at).toLocaleString() : '',
+            };
+        });
+        res.json(activities);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
