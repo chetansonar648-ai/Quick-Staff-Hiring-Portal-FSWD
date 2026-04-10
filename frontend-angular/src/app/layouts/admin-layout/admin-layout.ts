@@ -2,6 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 
+import { AuthService } from '../../services/auth.service';
+
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
@@ -11,6 +13,11 @@ import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router
 export class AdminLayoutComponent {
   sidebarOpen = true;
   currentPath = '';
+
+  get headerDisplayName(): string {
+    const name = this.authService.getCurrentUser()?.name?.trim();
+    return name || 'Admin';
+  }
 
   menuItems = [
     { path: '/admin', label: 'Dashboard', icon: '📊' },
@@ -22,7 +29,10 @@ export class AdminLayoutComponent {
     { path: '/admin/settings', label: 'Settings', icon: '⚙️' },
   ];
 
-  constructor(public router: Router) {
+  constructor(
+    public router: Router,
+    private authService: AuthService,
+  ) {
     this.currentPath = this.router.url;
     this.router.events.subscribe((ev) => {
       if (ev instanceof NavigationEnd) {

@@ -60,6 +60,30 @@ router.get('/api/admin/recent-activity', async (req, res) => {
     }
 });
 
+router.get('/api/admin/profile', async (req, res) => {
+    try {
+        const result = await pool.query(
+            `SELECT id, name, email, role, created_at
+       FROM users
+       WHERE id = $1 AND role = 'admin'`,
+            [req.user.id]
+        );
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Admin not found' });
+        }
+        const u = result.rows[0];
+        res.json({
+            id: u.id,
+            name: u.name,
+            email: u.email,
+            role: u.role,
+            created_at: u.created_at,
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // ============ CLIENTS ============
 router.get('/clients', async (req, res) => {
     try {

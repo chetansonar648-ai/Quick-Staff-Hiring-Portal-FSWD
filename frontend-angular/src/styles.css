@@ -326,6 +326,17 @@ input:focus, select:focus, textarea:focus {
   color: #475569;
 }
 
+.user-info-link {
+  border: none;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.user-info-link:hover {
+  background: #e2e8f0;
+}
+
 .content-area {
   flex: 1;
   padding: 32px;

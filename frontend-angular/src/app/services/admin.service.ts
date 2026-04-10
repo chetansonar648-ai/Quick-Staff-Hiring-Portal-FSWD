@@ -17,6 +17,14 @@ export interface AdminRecentActivity {
   time: string;
 }
 
+export interface AdminProfile {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  created_at: string;
+}
+
 export interface AdminClientRow {
   id: number;
   name: string;
@@ -137,6 +145,10 @@ export class AdminService {
 
   getRecentActivity(): Observable<AdminRecentActivity[]> {
     return this.http.get<AdminRecentActivity[]>(`${this.apiAdmin}/recent-activity`);
+  }
+
+  getAdminProfile(): Observable<AdminProfile> {
+    return this.http.get<AdminProfile>(`${this.apiAdmin}/profile`);
   }
 
   getClients(): Observable<AdminClientRow[]> {

@@ -168,6 +168,31 @@ export const login = async (req, res) => {
   });
 };
 
+export const changePassword = async (req, res) => {
+  const { current_password, new_password } = req.body;
+  if (!current_password || !new_password) {
+    return res.status(400).json({ success: false, message: 'Current and new password are required' });
+  }
+  if (String(new_password).length < 6) {
+    return res.status(400).json({ success: false, message: 'New password must be at least 6 characters' });
+  }
+
+  const existing = await query('SELECT id, password FROM users WHERE id = $1', [req.user.id]);
+  const row = existing.rows[0];
+  if (!row) {
+    return res.status(404).json({ success: false, message: 'User not found' });
+  }
+
+  const valid = await comparePassword(current_password, row.password);
+  if (!valid) {
+    return res.status(400).json({ success: false, message: 'Current password is incorrect' });
+  }
+
+  const passwordHash = await hashPassword(new_password);
+  await query('UPDATE users SET password = $1, updated_at = NOW() WHERE id = $2', [passwordHash, req.user.id]);
+  return res.json({ success: true });
+};
+
 export const me = async (req, res) => {
   const userResult = await query(
     `SELECT u.id, u.name, u.email, u.role, u.phone, u.address, u.profile_image,

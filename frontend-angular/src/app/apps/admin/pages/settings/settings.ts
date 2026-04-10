@@ -1,6 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+
+import { AdminProfile, AdminService } from '../../../../services/admin.service';
+import { AuthService } from '../../../../services/auth.service';
 
 @Component({
   selector: 'app-admin-settings',
@@ -8,24 +11,49 @@ import { FormsModule } from '@angular/forms';
   imports: [CommonModule, FormsModule],
   templateUrl: './settings.html',
 })
-export class AdminSettingsComponent {
+export class AdminSettingsComponent implements OnInit {
   showPasswordModal = false;
   passwordError = '';
+  passSaving = false;
   passForm = {
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
   };
 
-  adminProfile = {
-    name: 'Admin User',
-    email: 'admin@example.com',
-    role: 'Administrator',
-    userId: '1',
-    joinedDate: '2024-01-15',
-  };
+  profile: AdminProfile | null = null;
+  loading = true;
+  loadError = '';
 
-  handleChangePassword(e: Event): void {
+  constructor(
+    private adminService: AdminService,
+    private authService: AuthService,
+    private cdr: ChangeDetectorRef,
+  ) {}
+
+  ngOnInit(): void {
+    this.loadProfile();
+  }
+
+  loadProfile(): void {
+    this.loading = true;
+    this.loadError = '';
+    this.adminService.getAdminProfile().subscribe({
+      next: (res) => {
+        this.profile = res;
+        this.loading = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error(err);
+        this.loadError = AdminService.errorMessage(err);
+        this.loading = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  async handleChangePassword(e: Event): Promise<void> {
     e.preventDefault();
     this.passwordError = '';
 
@@ -39,8 +67,17 @@ export class AdminSettingsComponent {
       return;
     }
 
-    this.showPasswordModal = false;
-    this.passForm = { currentPassword: '', newPassword: '', confirmPassword: '' };
+    this.passSaving = true;
+    try {
+      await this.authService.changePassword(this.passForm.currentPassword, this.passForm.newPassword);
+      this.showPasswordModal = false;
+      this.passForm = { currentPassword: '', newPassword: '', confirmPassword: '' };
+    } catch (err) {
+      this.passwordError = AuthService.errorMessage(err);
+    } finally {
+      this.passSaving = false;
+      this.cdr.detectChanges();
+    }
   }
 
   stopPropagation(e: Event): void {
@@ -48,11 +85,17 @@ export class AdminSettingsComponent {
   }
 
   formatJoinedDate(): string {
+    const raw = this.profile?.created_at;
+    if (!raw) return '';
     try {
-      return new Date(this.adminProfile.joinedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+      return new Date(raw).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
     } catch {
       return '';
     }
   }
-}
 
+  formatRole(role: string | undefined): string {
+    if (!role) return '';
+    return role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
+  }
+}

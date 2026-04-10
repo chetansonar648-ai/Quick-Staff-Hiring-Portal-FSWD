@@ -4,32 +4,35 @@
     <p>Manage your admin profile and security settings</p>
   </div>
 
-  <div class="settings-grid">
+  <p *ngIf="loading" class="settings-status">Loading profile…</p>
+  <p *ngIf="loadError && !loading" class="settings-status" style="color: #b91c1c;">{{ loadError }}</p>
+
+  <div class="settings-grid" *ngIf="!loading && profile">
     <!-- Admin Profile Section -->
     <div class="settings-section">
       <h3>👤 Admin Profile</h3>
       <div class="settings-card profile-card">
         <div class="profile-avatar">
           <div class="avatar-circle">
-            {{ adminProfile.name.charAt(0) }}
+            {{ profile.name.charAt(0) || '?' }}
           </div>
         </div>
         <div class="profile-details">
           <div class="profile-item">
             <label>Name</label>
-            <p>{{ adminProfile.name }}</p>
+            <p>{{ profile.name }}</p>
           </div>
           <div class="profile-item">
             <label>Email</label>
-            <p>{{ adminProfile.email }}</p>
+            <p>{{ profile.email }}</p>
           </div>
           <div class="profile-item">
             <label>Role</label>
-            <p><span class="role-badge">{{ adminProfile.role }}</span></p>
+            <p><span class="role-badge">{{ formatRole(profile.role) }}</span></p>
           </div>
           <div class="profile-item">
             <label>User ID</label>
-            <p>#{{ adminProfile.userId }}</p>
+            <p>#{{ profile.id }}</p>
           </div>
           <div class="profile-item">
             <label>Member Since</label>
@@ -106,12 +109,11 @@
           <button type="button" class="cancel-btn" (click)="showPasswordModal = false">
             Cancel
           </button>
-          <button type="submit" class="submit-btn">
-            Update Password
+          <button type="submit" class="submit-btn" [disabled]="passSaving">
+            {{ passSaving ? 'Updating…' : 'Update Password' }}
           </button>
         </div>
       </form>
     </div>
   </div>
 </div>
-
