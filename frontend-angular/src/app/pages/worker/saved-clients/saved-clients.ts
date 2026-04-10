@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { finalize, from } from 'rxjs';
 
 import { WorkerService, type SavedClientApi } from '../../../services/worker.service';
 
@@ -19,23 +20,37 @@ export class SavedClientsComponent implements OnInit {
   searchQuery = '';
   sortOption: 'recent' | 'name' = 'recent';
 
-  constructor(private readonly workerService: WorkerService) {}
+  constructor(
+    private readonly workerService: WorkerService,
+    private readonly cdr: ChangeDetectorRef,
+  ) {}
 
   ngOnInit(): void {
     this.load();
   }
 
-  private async load(): Promise<void> {
+  private load(): void {
     this.loading = true;
     this.error = null;
-    try {
-      this.clients = await this.workerService.getSavedClients();
-    } catch (err) {
-      this.error = WorkerService.errorMessage(err);
-      this.clients = [];
-    } finally {
-      this.loading = false;
-    }
+    from(this.workerService.getSavedClients())
+      .pipe(
+        finalize(() => {
+          this.loading = false;
+          this.cdr.detectChanges();
+        }),
+      )
+      .subscribe({
+        next: (clients) => {
+          this.clients = clients;
+          this.error = null;
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          this.error = WorkerService.errorMessage(err);
+          this.clients = [];
+          this.cdr.detectChanges();
+        },
+      });
   }
 
   get filteredClients(): SavedClientApi[] {

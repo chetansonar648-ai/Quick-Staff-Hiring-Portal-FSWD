@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { finalize, from } from 'rxjs';
 
 import { ClientService } from '../../../../services/client.service';
 import { WorkerService } from '../../../../services/worker.service';
@@ -34,15 +35,16 @@ export class StaffProfileComponent implements OnInit {
     public router: Router,
     private readonly workerService: WorkerService,
     private readonly clientService: ClientService,
+    private readonly cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
     this.id = this.route.snapshot.paramMap.get('id');
 
-    void this.loadWorker();
+    this.loadWorker();
   }
 
-  private async loadWorker(): Promise<void> {
+  private loadWorker(): void {
     this.loading = true;
     this.error = null;
     this.saveError = null;
@@ -53,34 +55,45 @@ export class StaffProfileComponent implements OnInit {
     if (!workerId || Number.isNaN(workerId)) {
       this.loading = false;
       this.error = 'Invalid worker id';
+      this.cdr.detectChanges();
       return;
     }
 
-    try {
-      const p = await this.workerService.getWorkerProfile(workerId);
-      this.worker = {
-        id: this.id,
-        name: p?.name,
-        role: p?.role,
-        rating: p?.rating,
-        rating_count: p?.rating_count,
-        description: p?.description,
-        about: p?.description,
-        skills: Array.isArray(p?.skills) ? (p.skills as string[]).map((s) => ({ skill_name: s })) : [],
-        reviews: (p as any)?.reviews || [],
-        availability: p?.availability,
-        booked_dates: (p as any)?.booked_dates || [],
-        image_url: p?.image_url || this.defaultWorkerAvatar,
-        hourly_rate: p?.hourly_rate,
-        total_jobs_completed: p?.completed_jobs ?? 0,
-      };
-    } catch (err) {
-      this.error = WorkerService.errorMessage(err);
-      this.worker = null;
-    } finally {
-      this.loading = false;
-      this.rebuildCalendar();
-    }
+    from(this.workerService.getWorkerProfile(workerId))
+      .pipe(
+        finalize(() => {
+          this.loading = false;
+          this.rebuildCalendar();
+          this.cdr.detectChanges();
+        }),
+      )
+      .subscribe({
+        next: (p) => {
+          this.worker = {
+            id: this.id,
+            name: p?.name,
+            role: p?.role,
+            rating: p?.rating,
+            rating_count: p?.rating_count,
+            description: p?.description,
+            about: p?.description,
+            skills: Array.isArray(p?.skills) ? (p.skills as string[]).map((s) => ({ skill_name: s })) : [],
+            reviews: (p as any)?.reviews || [],
+            availability: p?.availability,
+            booked_dates: (p as any)?.booked_dates || [],
+            image_url: p?.image_url || this.defaultWorkerAvatar,
+            hourly_rate: p?.hourly_rate,
+            total_jobs_completed: p?.completed_jobs ?? 0,
+          };
+          this.error = null;
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          this.error = WorkerService.errorMessage(err);
+          this.worker = null;
+          this.cdr.detectChanges();
+        },
+      });
   }
 
   nextMonth(): void {

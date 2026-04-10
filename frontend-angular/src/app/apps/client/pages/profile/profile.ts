@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { finalize, from } from 'rxjs';
 
 import { ClientService } from '../../../../services/client.service';
 import { AuthService } from '../../../../services/auth.service';
@@ -37,31 +38,42 @@ export class ClientProfileComponent implements OnInit {
   constructor(
     private readonly clientService: ClientService,
     private readonly authService: AuthService,
+    private readonly cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
-    void this.loadProfile();
+    this.loadProfile();
   }
 
-  private async loadProfile(): Promise<void> {
+  private loadProfile(): void {
     this.loading = true;
     this.profileError = null;
     this.profileSuccess = false;
-    try {
-      const p = await this.clientService.getMyProfile();
-      this.profile = {
-        ...this.profile,
-        name: p.name || 'Client',
-        email: p.email || '',
-        phone: p.phone || '',
-        address: p.address || '',
-        profile_image: p.profile_image || '',
-      };
-    } catch (err) {
-      this.profileError = ClientService.errorMessage(err);
-    } finally {
-      this.loading = false;
-    }
+    from(this.clientService.getMyProfile())
+      .pipe(
+        finalize(() => {
+          this.loading = false;
+          this.cdr.detectChanges();
+        }),
+      )
+      .subscribe({
+        next: (p) => {
+          this.profile = {
+            ...this.profile,
+            name: p.name || 'Client',
+            email: p.email || '',
+            phone: p.phone || '',
+            address: p.address || '',
+            profile_image: p.profile_image || '',
+          };
+          this.profileError = null;
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          this.profileError = ClientService.errorMessage(err);
+          this.cdr.detectChanges();
+        },
+      });
   }
 
   openChangePhotoPrompt(): void {
@@ -110,18 +122,24 @@ export class ClientProfileComponent implements OnInit {
     }
 
     this.loading = true;
-    void this.authService
-      .changePassword(this.passwordForm.current_password, this.passwordForm.new_password)
-      .then(() => {
-        this.passwordForm = { current_password: '', new_password: '', confirm_password: '' };
-        this.passwordSuccess = true;
-        setTimeout(() => (this.passwordSuccess = false), 2000);
-      })
-      .catch((err) => {
-        this.passwordError = AuthService.errorMessage(err);
-      })
-      .finally(() => {
-        this.loading = false;
+    from(this.authService.changePassword(this.passwordForm.current_password, this.passwordForm.new_password))
+      .pipe(
+        finalize(() => {
+          this.loading = false;
+          this.cdr.detectChanges();
+        }),
+      )
+      .subscribe({
+        next: () => {
+          this.passwordForm = { current_password: '', new_password: '', confirm_password: '' };
+          this.passwordSuccess = true;
+          setTimeout(() => (this.passwordSuccess = false), 2000);
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          this.passwordError = AuthService.errorMessage(err);
+          this.cdr.detectChanges();
+        },
       });
   }
 

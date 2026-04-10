@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { finalize, from } from 'rxjs';
 
 import { ClientService } from '../../../../services/client.service';
 
@@ -44,25 +45,35 @@ export class SavedWorkersComponent implements OnInit {
   constructor(
     public router: Router,
     private readonly clientService: ClientService,
+    private readonly cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
-    void this.load();
+    this.load();
   }
 
-  private async load(): Promise<void> {
+  private load(): void {
     this.loading = true;
     this.error = null;
-    try {
-      const saved = await this.clientService.getSavedWorkers();
-      // UI expects `worker_id` key; service returns `id`.
-      this.workers = (saved || []).map((w: any) => ({ ...w, worker_id: w.worker_id ?? w.id }));
-    } catch (err) {
-      this.error = ClientService.errorMessage(err);
-      this.workers = [];
-    } finally {
-      this.loading = false;
-    }
+    from(this.clientService.getSavedWorkers())
+      .pipe(
+        finalize(() => {
+          this.loading = false;
+          this.cdr.detectChanges();
+        }),
+      )
+      .subscribe({
+        next: (saved) => {
+          this.workers = (saved || []).map((w: any) => ({ ...w, worker_id: w.worker_id ?? w.id }));
+          this.error = null;
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          this.error = ClientService.errorMessage(err);
+          this.workers = [];
+          this.cdr.detectChanges();
+        },
+      });
   }
 
   get filteredWorkers(): any[] {
@@ -76,17 +87,18 @@ export class SavedWorkersComponent implements OnInit {
     });
   }
 
-  async handleRemove(workerId: number): Promise<void> {
+  handleRemove(workerId: number): void {
     if (confirm('Remove this worker from your saved list?')) {
       this.loading = true;
       this.error = null;
-      try {
-        await this.clientService.removeSavedWorker(workerId);
-        await this.load();
-      } catch (err) {
-        this.error = ClientService.errorMessage(err);
-        this.loading = false;
-      }
+      from(this.clientService.removeSavedWorker(workerId)).subscribe({
+        next: () => this.load(),
+        error: (err) => {
+          this.error = ClientService.errorMessage(err);
+          this.loading = false;
+          this.cdr.detectChanges();
+        },
+      });
     }
   }
 

@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { finalize, from } from 'rxjs';
 
 import { environment } from '../../../../environments/environment';
 import { WorkerService, type WorkerProfileApi } from '../../../services/worker.service';
@@ -75,24 +76,35 @@ export class WorkerProfileComponent implements OnInit {
   constructor(
     private readonly workerService: WorkerService,
     private readonly authService: AuthService,
+    private readonly cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
-    void this.loadProfile();
+    this.loadProfile();
   }
 
-  private async loadProfile(): Promise<void> {
+  private loadProfile(): void {
     this.loading = true;
     this.error = null;
     this.success = false;
-    try {
-      const p = await this.workerService.getMyProfile();
-      this.applyProfileFromApi(p);
-    } catch (err) {
-      this.error = WorkerService.errorMessage(err);
-    } finally {
-      this.loading = false;
-    }
+    from(this.workerService.getMyProfile())
+      .pipe(
+        finalize(() => {
+          this.loading = false;
+          this.cdr.detectChanges();
+        }),
+      )
+      .subscribe({
+        next: (p) => {
+          this.applyProfileFromApi(p);
+          this.error = null;
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          this.error = WorkerService.errorMessage(err);
+          this.cdr.detectChanges();
+        },
+      });
   }
 
   private applyProfileFromApi(p: WorkerProfileApi | null | undefined): void {
