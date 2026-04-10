@@ -32,7 +32,7 @@
 
         <span
           [ngClass]="'status-pill status-' + w.status.toLowerCase()"
-          (click)="toggleWorkerStatus(w.id, w.status)"
+          (click)="toggleWorkerStatus(w)"
           [style.cursor]="'pointer'"
           title="Click to toggle status"
         >
@@ -82,7 +82,7 @@
 
         <div class="modal-actions">
           <button type="button" class="cancel-btn" (click)="showAddModal = false">Cancel</button>
-          <button type="submit" class="submit-btn">Save</button>
+          <button type="submit" class="submit-btn" [disabled]="saving">{{ saving ? 'Saving…' : 'Save' }}</button>
         </div>
       </form>
     </div>
@@ -136,7 +136,7 @@
 
         <div class="modal-actions">
           <button type="button" class="cancel-btn" (click)="showEditModal = false">Cancel</button>
-          <button type="submit" class="submit-btn">Update</button>
+          <button type="submit" class="submit-btn" [disabled]="saving">{{ saving ? 'Saving…' : 'Update' }}</button>
         </div>
       </form>
     </div>

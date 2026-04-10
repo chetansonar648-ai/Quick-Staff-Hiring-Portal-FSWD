@@ -1,5 +1,14 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { forkJoin } from 'rxjs';
+
+import {
+  AdminDeviceStat,
+  AdminMonthlyPoint,
+  AdminService,
+  AdminTopServiceRow,
+  AdminTrafficStat,
+} from '../../../../services/admin.service';
 
 @Component({
   selector: 'app-admin-analytics',
@@ -7,36 +16,68 @@ import { Component } from '@angular/core';
   imports: [CommonModule],
   templateUrl: './analytics.html',
 })
-export class AdminAnalyticsComponent {
-  chartData = [
-    { month: 'Jan', value: 12 },
-    { month: 'Feb', value: 18 },
-    { month: 'Mar', value: 9 },
-    { month: 'Apr', value: 24 },
-  ];
-  topServices = [
-    { name: 'Cleaning', count: 32 },
-    { name: 'Moving', count: 21 },
-  ];
-  metrics: any = { total_users: 0, total_workers: 0, total_clients: 0, total_bookings: 0 };
-  deviceStats = [
-    { device: 'Desktop', percentage: 62 },
-    { device: 'Mobile', percentage: 34 },
-    { device: 'Tablet', percentage: 4 },
-  ];
-  trafficStats = [
-    { source: 'Direct', percentage: 40 },
-    { source: 'Search', percentage: 35 },
-    { source: 'Social', percentage: 25 },
-  ];
+export class AdminAnalyticsComponent implements OnInit {
+  chartData: AdminMonthlyPoint[] = [];
+  topServices: AdminTopServiceRow[] = [];
+  metrics: { totalUsers: number; totalWorkers: number; totalClients: number; totalBookings: number } = {
+    totalUsers: 0,
+    totalWorkers: 0,
+    totalClients: 0,
+    totalBookings: 0,
+  };
+  deviceStats: AdminDeviceStat[] = [];
+  trafficStats: AdminTrafficStat[] = [];
   loading = false;
+  error = '';
 
-  get maxValue(): number {
-    return this.chartData.length > 0 ? Math.max(...this.chartData.map((d) => Number(d.value) || 0)) || 10 : 100;
+  constructor(
+    private adminService: AdminService,
+    private cdr: ChangeDetectorRef,
+  ) {}
+
+  ngOnInit(): void {
+    this.load();
   }
 
-  toNumber(v: any): number {
+  load(): void {
+    this.loading = true;
+    this.error = '';
+    forkJoin({
+      stats: this.adminService.getDashboardStats(),
+      monthly: this.adminService.getAnalyticsMonthly(),
+      topServices: this.adminService.getAnalyticsTopServices(),
+      devices: this.adminService.getAnalyticsDevices(),
+      traffic: this.adminService.getAnalyticsTraffic(),
+    }).subscribe({
+      next: ({ stats, monthly, topServices, devices, traffic }) => {
+        this.metrics = {
+          totalUsers: stats.totalUsers ?? 0,
+          totalWorkers: stats.totalWorkers ?? 0,
+          totalClients: stats.totalClients ?? 0,
+          totalBookings: stats.totalBookings ?? 0,
+        };
+        this.chartData = monthly || [];
+        this.topServices = topServices || [];
+        this.deviceStats = devices || [];
+        this.trafficStats = traffic || [];
+        this.loading = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.error = AdminService.errorMessage(err);
+        this.loading = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  get maxValue(): number {
+    return this.chartData.length > 0
+      ? Math.max(...this.chartData.map((d) => Number(d.value) || 0)) || 10
+      : 100;
+  }
+
+  toNumber(v: unknown): number {
     return Number(v) || 0;
   }
 }
-

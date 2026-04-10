@@ -1,6 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { forkJoin } from 'rxjs';
+
+import { AdminJobRequestRow, AdminService } from '../../../../services/admin.service';
 
 type Req = {
   id: number;
@@ -15,24 +18,26 @@ type Req = {
   status: string;
 };
 
+type IdName = { id: number; name: string };
+
 @Component({
   selector: 'app-admin-booking-requests',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './booking-requests.html',
 })
-export class AdminBookingRequestsComponent {
-  requests: Req[] = [
-    { id: 1, title: 'Need a cleaner', client_name: 'John Doe', worker_name: 'Ava Johnson', service_name: 'Cleaning', requested_date: new Date().toISOString(), status: 'pending' },
-  ];
+export class AdminBookingRequestsComponent implements OnInit {
+  requests: Req[] = [];
   filterStatus = 'All';
   startDate = '';
   endDate = '';
   showModal = false;
   loading = false;
-  clients = [{ id: 1, name: 'John Doe' }];
-  workers = [{ id: 1, name: 'Ava Johnson' }];
-  services = [{ id: 1, name: 'Cleaning' }];
+  error = '';
+  saving = false;
+  clients: IdName[] = [];
+  workers: IdName[] = [];
+  services: IdName[] = [];
 
   formData = {
     client_id: '',
@@ -46,38 +51,144 @@ export class AdminBookingRequestsComponent {
     status: 'pending',
   };
 
+  constructor(
+    private adminService: AdminService,
+    private cdr: ChangeDetectorRef,
+  ) {}
+
+  ngOnInit(): void {
+    this.loadRefs();
+    this.loadRequests();
+  }
+
+  private loadRefs(): void {
+    forkJoin({
+      clients: this.adminService.getClients(),
+      workers: this.adminService.getWorkers(),
+      services: this.adminService.getServices(),
+    }).subscribe({
+      next: ({ clients, workers, services }) => {
+        this.clients = clients.map((c) => ({ id: c.id, name: c.name }));
+        this.workers = workers.map((w) => ({ id: w.id, name: w.name }));
+        this.services = services.map((s) => ({ id: s.id, name: s.name }));
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.error = AdminService.errorMessage(err);
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  loadRequests(): void {
+    this.loading = true;
+    this.error = '';
+    this.adminService.getRequests().subscribe({
+      next: (rows) => {
+        this.requests = rows.map((r) => this.mapReq(r));
+        this.loading = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.error = AdminService.errorMessage(err);
+        this.loading = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  private mapReq(r: AdminJobRequestRow): Req {
+    return {
+      id: r.id,
+      title: r.title || '—',
+      client_name: r.client_name,
+      client_id: r.client_id,
+      worker_name: r.worker_name,
+      worker_id: r.worker_id,
+      service_name: r.service_name,
+      service_id: r.service_id,
+      requested_date: r.requested_date || '',
+      status: (r.status || 'pending').toLowerCase(),
+    };
+  }
+
+  get filteredRequests(): Req[] {
+    return this.requests.filter((r) => {
+      if (this.filterStatus !== 'All' && r.status !== this.filterStatus.toLowerCase()) {
+        return false;
+      }
+      const d = r.requested_date ? new Date(r.requested_date).getTime() : NaN;
+      if (this.startDate) {
+        const start = new Date(this.startDate).setHours(0, 0, 0, 0);
+        if (!Number.isNaN(d) && d < start) return false;
+      }
+      if (this.endDate) {
+        const end = new Date(this.endDate).setHours(23, 59, 59, 999);
+        if (!Number.isNaN(d) && d > end) return false;
+      }
+      return true;
+    });
+  }
+
   handleAction(id: number, status: string): void {
-    if (!confirm(`Are you sure you want to ${status} this request?`)) return;
-    this.requests = this.requests.map((r) => (r.id === id ? { ...r, status } : r));
+    if (!confirm(`Are you sure you want to mark this request as ${status}?`)) return;
+    this.error = '';
+    this.adminService.putRequest(id, { status }).subscribe({
+      next: () => this.loadRequests(),
+      error: (err) => {
+        this.error = AdminService.errorMessage(err);
+        this.cdr.detectChanges();
+      },
+    });
   }
 
   handleCreate(e: Event): void {
     e.preventDefault();
-    const newId = Math.max(0, ...this.requests.map((r) => r.id)) + 1;
-    this.requests = [
-      ...this.requests,
-      {
-        id: newId,
-        title: this.formData.title,
-        client_name: this.clients.find((c) => String(c.id) === String(this.formData.client_id))?.name || '',
-        worker_name: this.workers.find((w) => String(w.id) === String(this.formData.worker_id))?.name || '',
-        service_name: this.services.find((s) => String(s.id) === String(this.formData.service_id))?.name || '',
-        requested_date: this.formData.requested_date ? new Date(this.formData.requested_date).toISOString() : new Date().toISOString(),
+    const client_id = Number(this.formData.client_id);
+    const worker_id = Number(this.formData.worker_id);
+    const service_id = Number(this.formData.service_id);
+    if (!client_id || !worker_id || !service_id || !this.formData.title?.trim() || !this.formData.requested_date) {
+      this.error = 'Fill in title, client, worker, service, and date.';
+      this.cdr.detectChanges();
+      return;
+    }
+    this.saving = true;
+    this.error = '';
+    this.adminService
+      .postRequest({
+        client_id,
+        worker_id,
+        service_id,
+        title: this.formData.title.trim(),
+        description: this.formData.description?.trim() || '',
+        requested_date: this.formData.requested_date,
+        preferred_time: this.formData.preferred_time || 'Morning',
+        budget: this.formData.budget ? Number(this.formData.budget) : null,
         status: 'pending',
-      },
-    ];
-    this.showModal = false;
-    this.formData = {
-      client_id: '',
-      worker_id: '',
-      service_id: '',
-      title: '',
-      description: '',
-      requested_date: '',
-      preferred_time: 'Morning',
-      budget: '',
-      status: 'pending',
-    };
+      })
+      .subscribe({
+        next: () => {
+          this.showModal = false;
+          this.formData = {
+            client_id: '',
+            worker_id: '',
+            service_id: '',
+            title: '',
+            description: '',
+            requested_date: '',
+            preferred_time: 'Morning',
+            budget: '',
+            status: 'pending',
+          };
+          this.saving = false;
+          this.loadRequests();
+        },
+        error: (err) => {
+          this.error = AdminService.errorMessage(err);
+          this.saving = false;
+          this.cdr.detectChanges();
+        },
+      });
   }
 
   formatDate(d: string): string {
@@ -88,4 +199,3 @@ export class AdminBookingRequestsComponent {
     }
   }
 }
-

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import pool from '../config/db.js';
 import { authenticate } from '../middleware/auth.js';
+import { hashPassword } from '../utils/password.js';
 
 const router = Router();
 
@@ -62,12 +63,37 @@ router.get('/api/admin/recent-activity', async (req, res) => {
 // ============ CLIENTS ============
 router.get('/clients', async (req, res) => {
     try {
-        const result = await pool.query(
-            "SELECT * FROM users WHERE role = 'client' ORDER BY id DESC"
-        );
+        const result = await pool.query(`
+            SELECT u.*,
+              (SELECT COUNT(*)::int FROM bookings b WHERE b.client_id = u.id) AS booking_count,
+              (SELECT COALESCE(SUM(b.total_price), 0) FROM bookings b WHERE b.client_id = u.id AND b.status = 'completed') AS total_spent
+            FROM users u
+            WHERE u.role = 'client'
+            ORDER BY u.id DESC
+        `);
         res.json(result.rows);
     } catch (err) {
         res.status(500).json({ error: err.message });
+    }
+});
+
+router.post('/clients', async (req, res) => {
+    try {
+        const { name, email, phone, address } = req.body;
+        if (!name || !email) {
+            return res.status(400).json({ error: 'Name and email are required' });
+        }
+        const defaultPass = process.env.ADMIN_DEFAULT_CLIENT_PASSWORD || '123456';
+        const passwordHash = await hashPassword(defaultPass);
+        const result = await pool.query(
+            `INSERT INTO users (name, email, password, role, phone, address)
+       VALUES ($1, $2, $3, 'client', $4, $5) RETURNING *`,
+            [name, email, passwordHash, phone || null, address || null]
+        );
+        res.status(201).json(result.rows[0]);
+    } catch (err) {
+        const dup = err?.message?.includes('users_email_key');
+        res.status(dup ? 409 : 500).json({ error: dup ? 'Email already exists' : err.message });
     }
 });
 
@@ -92,14 +118,26 @@ router.get('/workers', async (req, res) => {
 router.post('/workers', async (req, res) => {
     try {
         const { name, email, phone } = req.body;
+        if (!name || !email) {
+            return res.status(400).json({ error: 'Name and email are required' });
+        }
+        const defaultPass = process.env.ADMIN_DEFAULT_WORKER_PASSWORD || '123456';
+        const passwordHash = await hashPassword(defaultPass);
         const result = await pool.query(
             `INSERT INTO users (name, email, password, role, phone)
-       VALUES ($1, $2, '123456', 'worker', $3) RETURNING *`,
-            [name, email, phone]
+       VALUES ($1, $2, $3, 'worker', $4) RETURNING *`,
+            [name, email, passwordHash, phone || null]
         );
-        res.json(result.rows[0]);
+        const user = result.rows[0];
+        await pool.query(
+            `INSERT INTO worker_profiles (user_id, bio, skills, hourly_rate, availability)
+       VALUES ($1, '', ARRAY[]::text[], NULL, '{}'::jsonb)`,
+            [user.id]
+        );
+        res.status(201).json(user);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        const dup = err?.message?.includes('users_email_key');
+        res.status(dup ? 409 : 500).json({ error: dup ? 'Email already exists' : err.message });
     }
 });
 
@@ -271,12 +309,15 @@ router.delete('/bookings/:id', async (req, res) => {
 router.get('/reviews', async (req, res) => {
     try {
         const result = await pool.query(`
-      SELECT r.*, 
-             c.name as client_name, 
-             w.name as worker_name
+      SELECT r.*,
+             c.name as client_name,
+             w.name as worker_name,
+             s.name as service_name
       FROM reviews r
-      LEFT JOIN users c ON r.client_id = c.id
-      LEFT JOIN users w ON r.worker_id = w.id
+      LEFT JOIN users c ON r.reviewer_id = c.id
+      LEFT JOIN users w ON r.reviewee_id = w.id
+      LEFT JOIN bookings b ON r.booking_id = b.id
+      LEFT JOIN services s ON b.service_id = s.id
       ORDER BY r.created_at DESC
     `);
         res.json(result.rows);
@@ -288,12 +329,15 @@ router.get('/reviews', async (req, res) => {
 router.post('/reviews', async (req, res) => {
     try {
         const { client_id, worker_id, booking_id, rating, comment } = req.body;
+        if (!booking_id || !client_id || !worker_id || rating == null) {
+            return res.status(400).json({ error: 'booking_id, client_id, worker_id, and rating are required' });
+        }
         const result = await pool.query(
-            `INSERT INTO reviews (client_id, worker_id, booking_id, rating, comment)
+            `INSERT INTO reviews (booking_id, reviewer_id, reviewee_id, rating, comment)
        VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-            [client_id, worker_id, booking_id, rating, comment]
+            [booking_id, client_id, worker_id, rating, comment || '']
         );
-        res.json(result.rows[0]);
+        res.status(201).json(result.rows[0]);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

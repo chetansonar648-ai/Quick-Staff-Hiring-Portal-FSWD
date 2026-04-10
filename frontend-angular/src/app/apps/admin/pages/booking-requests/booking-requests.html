@@ -7,7 +7,7 @@
         <span>to</span>
         <input type="date" [(ngModel)]="endDate" placeholder="End Date" title="End Date" />
       </div>
-      <select [(ngModel)]="filterStatus" className="filter-select">
+      <select [(ngModel)]="filterStatus" class="filter-select">
         <option value="All">All Status</option>
         <option value="pending">Pending</option>
         <option value="accepted">Accepted</option>
@@ -18,6 +18,7 @@
   </div>
 
   <p *ngIf="loading">Loading...</p>
+  <p *ngIf="error && !loading" style="color: #b91c1c; padding: 0 1rem;">{{ error }}</p>
 
   <div *ngIf="!loading" class="requests-table-container">
     <table class="requests-table">
@@ -33,7 +34,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let req of requests">
+        <tr *ngFor="let req of filteredRequests">
           <td>{{ req.title }}</td>
           <td>{{ req.client_name || req.client_id }}</td>
           <td>{{ req.worker_name || req.worker_id }}</td>
@@ -45,13 +46,13 @@
             </span>
           </td>
           <td>
-            <ng-container *ngIf="req.status === 'pending'">
+            <ng-container *ngIf="req.status.toLowerCase() === 'pending'">
               <button class="action-btn accept" (click)="handleAction(req.id, 'accepted')">✓</button>
               <button class="action-btn reject" (click)="handleAction(req.id, 'rejected')">✗</button>
             </ng-container>
           </td>
         </tr>
-        <tr *ngIf="requests.length === 0">
+        <tr *ngIf="filteredRequests.length === 0">
           <td colspan="7">No requests found.</td>
         </tr>
       </tbody>
@@ -102,7 +103,7 @@
         </div>
         <div class="form-actions">
           <button type="button" (click)="showModal = false">Cancel</button>
-          <button type="submit" class="submit-btn">Create</button>
+          <button type="submit" class="submit-btn" [disabled]="saving">{{ saving ? 'Saving…' : 'Create' }}</button>
         </div>
       </form>
     </div>

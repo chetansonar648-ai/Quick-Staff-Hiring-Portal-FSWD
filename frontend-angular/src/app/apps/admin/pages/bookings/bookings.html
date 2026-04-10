@@ -9,6 +9,8 @@
 
   <!-- --- BOOKINGS TAB --- -->
   <ng-container *ngIf="activeTab === 'bookings'">
+    <p *ngIf="loading" class="no-text">Loading bookings…</p>
+    <p *ngIf="error && !loading" class="no-text" style="color: #b91c1c;">{{ error }}</p>
     <div class="bookings-toolbar">
       <div class="search-box">
         <input type="text" placeholder="Search bookings..." [(ngModel)]="searchTerm" />
@@ -17,7 +19,7 @@
       <button class="add-btn" (click)="handleAddBooking()">+ New Booking</button>
     </div>
     <div class="bookings-table-container">
-      <table class="bookings-table">
+      <table *ngIf="!loading" class="bookings-table">
         <thead>
           <tr>
             <th>ID</th><th>Client</th><th>Worker</th><th>Service</th><th>Date</th><th>Status</th><th>Amount</th><th>Actions</th>
@@ -41,6 +43,8 @@
 
   <!-- --- REQUESTS TAB --- -->
   <ng-container *ngIf="activeTab === 'requests'">
+    <p *ngIf="requestsLoading" class="no-text">Loading requests…</p>
+    <p *ngIf="reqError && !requestsLoading" class="no-text" style="color: #b91c1c;">{{ reqError }}</p>
     <div class="bookings-toolbar">
       <div class="request-filters">
         <input type="date" [(ngModel)]="reqStartDate" />
@@ -56,14 +60,14 @@
       <button class="add-btn" (click)="showReqModal = true">+ Add Request</button>
     </div>
     <div class="bookings-table-container">
-      <table class="bookings-table">
+      <table *ngIf="!requestsLoading" class="bookings-table">
         <thead>
           <tr>
             <th>ID</th><th>Title</th><th>Client</th><th>Worker</th><th>Service</th><th>Date</th><th>Status</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let req of requests">
+          <tr *ngFor="let req of filteredRequests">
             <td>#{{ req.id }}</td>
             <td><strong>{{ req.title }}</strong></td>
             <td>{{ req.client_name }}</td>
@@ -78,7 +82,7 @@
           </tr>
         </tbody>
       </table>
-      <p *ngIf="requests.length === 0" class="no-text">No requests found.</p>
+      <p *ngIf="!requestsLoading && filteredRequests.length === 0" class="no-text">No requests found.</p>
     </div>
   </ng-container>
 
@@ -109,6 +113,7 @@
           </select>
         </div>
         <div class="form-group"><label>Date</label><input type="datetime-local" [(ngModel)]="form.booking_date" name="booking_date" /></div>
+        <div class="form-group"><label>Address</label><input type="text" [(ngModel)]="form.address" name="address" placeholder="Service location" /></div>
         <div class="form-group"><label>Price</label><input type="number" [(ngModel)]="form.total_price" name="total_price" /></div>
         <div class="modal-actions">
           <button type="button" (click)="showAddModal = false">Cancel</button>

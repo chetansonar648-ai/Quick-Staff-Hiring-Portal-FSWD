@@ -1,6 +1,8 @@
 <div *ngIf="loading" class="analytics-page p-8 text-center">Loading Analytics...</div>
 
-<div *ngIf="!loading" class="analytics-page">
+<div *ngIf="error && !loading" class="analytics-page p-8 text-center" style="color: #b91c1c;">{{ error }}</div>
+
+<div *ngIf="!loading && !error" class="analytics-page">
   <div class="page-header">
     <h2>Analytics & Reports</h2>
     <p>Track performance and user engagement metrics</p>
@@ -31,21 +33,21 @@
         <div class="metric-item">
           <div class="metric-info">
             <span class="metric-label">Total Users</span>
-            <span class="metric-value">{{ metrics?.total_users || 0 }}</span>
+            <span class="metric-value">{{ metrics.totalUsers }}</span>
           </div>
-          <span class="metric-change positive">Workers: {{ metrics?.total_workers || 0 }}</span>
+          <span class="metric-change positive">Workers: {{ metrics.totalWorkers }}</span>
         </div>
         <div class="metric-item">
           <div class="metric-info">
             <span class="metric-label">Total Bookings</span>
-            <span class="metric-value">{{ metrics?.total_bookings || 0 }}</span>
+            <span class="metric-value">{{ metrics.totalBookings }}</span>
           </div>
-          <span class="metric-change positive">Clients: {{ metrics?.total_clients || 0 }}</span>
+          <span class="metric-change positive">Clients: {{ metrics.totalClients }}</span>
         </div>
         <div class="metric-item">
           <div class="metric-info">
             <span class="metric-label">Active Workers</span>
-            <span class="metric-value">{{ metrics?.total_workers || 0 }}</span>
+            <span class="metric-value">{{ metrics.totalWorkers }}</span>
           </div>
           <span class="metric-change positive">Ready to work</span>
         </div>

@@ -4,7 +4,10 @@
     <p>Manage and monitor customer feedback and ratings</p>
   </div>
 
-  <div class="reviews-overview">
+  <p *ngIf="loading" class="no-results">Loading reviews…</p>
+  <p *ngIf="error && !loading" class="no-results" style="color: #b91c1c;">{{ error }}</p>
+
+  <div class="reviews-overview" *ngIf="!loading">
     <div class="overview-card main-stat">
       <div class="stat-content">
         <h3>Average Rating</h3>
@@ -39,7 +42,7 @@
     </div>
   </div>
 
-  <div class="reviews-toolbar">
+  <div class="reviews-toolbar" *ngIf="!loading">
     <div class="search-box">
       <input type="text" placeholder="Search reviews..." [(ngModel)]="searchTerm" />
       <span class="search-icon">🔍</span>
@@ -54,14 +57,14 @@
     </div>
   </div>
 
-  <div class="reviews-list">
+  <div class="reviews-list" *ngIf="!loading">
     <div *ngFor="let review of filteredReviews" class="review-card">
       <div class="review-header">
         <div class="reviewer-info">
           <div class="reviewer-avatar">{{ review.client.charAt(0) }}</div>
           <div class="reviewer-details">
             <h4>{{ review.client }}</h4>
-            <p class="service-name">{{ review.service }}</p>
+            <p class="service-name">{{ review.service }}<span *ngIf="review.worker"> · {{ review.worker }}</span></p>
           </div>
         </div>
         <div class="review-meta">
@@ -86,7 +89,7 @@
     </div>
   </div>
 
-  <div *ngIf="filteredReviews.length === 0" class="no-results">
+  <div *ngIf="!loading && filteredReviews.length === 0" class="no-results">
     <p>No reviews found matching your criteria.</p>
   </div>
 
@@ -101,7 +104,7 @@
           <label>Select Booking</label>
           <select [(ngModel)]="newReview.bookingId" name="bookingId" required>
             <option value="">-- Select Completed Booking --</option>
-            <option *ngFor="let b of bookings" [value]="b.id">
+            <option *ngFor="let b of bookingOptions" [value]="b.id">
               #{{ b.id }} - {{ b.client_name }} (Service: {{ b.service_name }})
             </option>
           </select>
@@ -122,7 +125,7 @@
         </div>
         <div class="modal-actions">
           <button type="button" class="cancel-btn" (click)="showModal = false">Cancel</button>
-          <button type="submit" class="submit-btn">Submit Review</button>
+          <button type="submit" class="submit-btn" [disabled]="saving">{{ saving ? 'Saving…' : 'Submit Review' }}</button>
         </div>
       </form>
     </div>
