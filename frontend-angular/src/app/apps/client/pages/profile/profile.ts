@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { finalize, from } from 'rxjs';
+import { finalize } from 'rxjs';
+import { from } from 'rxjs';
 
 import { ClientService } from '../../../../services/client.service';
 import { AuthService } from '../../../../services/auth.service';
@@ -17,8 +18,8 @@ export class ClientProfileComponent implements OnInit {
 
   activeTab = 'profile';
   profile = {
-    name: 'Client',
-    email: 'client@example.com',
+    name: '',
+    email: '',
     phone: '',
     address: '',
     profile_image: '',
@@ -49,7 +50,7 @@ export class ClientProfileComponent implements OnInit {
     this.loading = true;
     this.profileError = null;
     this.profileSuccess = false;
-    from(this.clientService.getMyProfile())
+    this.clientService.getClientProfile()
       .pipe(
         finalize(() => {
           this.loading = false;
@@ -59,8 +60,7 @@ export class ClientProfileComponent implements OnInit {
       .subscribe({
         next: (p) => {
           this.profile = {
-            ...this.profile,
-            name: p.name || 'Client',
+            name: p.name || '',
             email: p.email || '',
             phone: p.phone || '',
             address: p.address || '',
@@ -136,7 +136,7 @@ export class ClientProfileComponent implements OnInit {
           setTimeout(() => (this.passwordSuccess = false), 2000);
           this.cdr.detectChanges();
         },
-        error: (err) => {
+        error: (err: unknown) => {
           this.passwordError = AuthService.errorMessage(err);
           this.cdr.detectChanges();
         },

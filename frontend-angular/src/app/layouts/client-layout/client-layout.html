@@ -1,6 +1,5 @@
-<div class="relative flex min-h-screen w-full flex-col">
-  <div class="flex min-h-screen w-full">
-    <aside class="w-64 flex-shrink-0 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col">
+<div class="relative flex h-screen w-full overflow-hidden">
+  <aside class="fixed left-0 top-0 z-30 h-full w-64 flex-shrink-0 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col">
       <div class="flex items-center gap-4 text-gray-900 dark:text-white px-6 h-16 border-b border-gray-200 dark:border-gray-800">
         <div class="size-6 text-primary">
           <span class="material-symbols-outlined text-3xl">hub</span>
@@ -67,9 +66,9 @@
           <span>Logout</span>
         </button>
       </div>
-    </aside>
+  </aside>
 
-    <div class="flex-1 flex min-h-screen flex-col">
+  <div class="ml-64 flex flex-1 flex-col min-h-screen max-w-full overflow-hidden">
       <header class="flex-shrink-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
         <div class="flex items-center justify-between h-16 px-6">
           <div class="flex items-center">
@@ -93,10 +92,9 @@
         </div>
       </header>
 
-      <main class="flex-1 overflow-y-auto">
+      <main class="flex-1 w-full max-w-full overflow-y-auto overflow-x-hidden">
         <router-outlet></router-outlet>
       </main>
-    </div>
   </div>
 </div>
 

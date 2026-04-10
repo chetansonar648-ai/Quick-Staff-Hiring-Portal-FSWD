@@ -28,11 +28,13 @@ export interface ClientStats {
 }
 
 export interface ClientProfileApi {
+  id?: number;
   name: string;
   email: string;
   phone?: string;
   address?: string;
   profile_image?: string;
+  role?: string;
 }
 
 export interface ClientBookingApi {
@@ -195,6 +197,13 @@ export class ClientService {
       address: u?.address ?? '',
       profile_image: u?.profile_image_url || u?.profile_image || '',
     };
+  }
+
+  getClientProfile(): Observable<ClientProfileApi> {
+    return this.http.get<ClientProfileApi>(`${this.baseUrl}/client/profile`).pipe(
+      timeout(this.requestTimeoutMs),
+      catchError((err) => throwError(() => err)),
+    );
   }
 
   async updateMyProfile(payload: {

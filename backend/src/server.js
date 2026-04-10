@@ -17,6 +17,7 @@ import workerRoutes from './routes/workers.js';
 import reviewRoutes from './routes/reviews.js';
 import profileRoutes from './routes/profile.js';
 import usersRoutes from './routes/users.js';
+import clientProfileRoutes from './routes/clientProfile.js';
 import adminApiRoutes from './routes/adminApi.js';
 
 import { errorHandler } from './middleware/errorHandler.js';
@@ -43,7 +44,7 @@ app.use(
   cors({
     origin: 'http://localhost:4200',
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   })
 );
@@ -73,6 +74,7 @@ app.use('/api/saved-clients', savedClientRoutes);
 app.use('/api/workers', workerRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/users', usersRoutes);
+app.use('/api/client', clientProfileRoutes);
 
 // Error handler (must be last)
 app.use(errorHandler);

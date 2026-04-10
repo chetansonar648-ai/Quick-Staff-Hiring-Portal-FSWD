@@ -16,6 +16,7 @@ import reviewRoutes from './routes/reviews.js'; // reviews.routes.js does not ex
 import savedWorkerRoutes from './routes/savedWorkers.js'; // saved.routes.js does not exist
 import requestRoutes from './routes/requests.js';
 import adminApiRoutes from './routes/adminApi.js';
+import clientProfileRoutes from './routes/clientProfile.js';
 
 import { notFound, errorHandler } from './middleware/errorHandler.js';
 
@@ -39,7 +40,7 @@ app.use(
   cors({
     origin: 'http://localhost:4200',
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   })
 );
@@ -64,6 +65,7 @@ app.use('/api/workers', workerRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/saved-workers', savedWorkerRoutes);
 app.use('/api/requests', requestRoutes);
+app.use('/api/client', clientProfileRoutes);
 
 // Admin Panel API routes (without /api prefix for admin frontend compatibility)
 app.use('/', adminApiRoutes);
